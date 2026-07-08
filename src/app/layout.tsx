@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import "./globals.css";
 import { Geist } from "next/font/google";
+import Sidebar from "@/components/layout/sidebar";
 import { cn } from "@/lib/utils";
+import "./globals.css";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "AI SEO 스튜디오",
@@ -17,7 +18,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={cn("font-sans", geist.variable)}>
-      <body>{children}</body>
+      <body className="bg-[#050816] text-white">
+        <div className="flex min-h-screen">
+          <Sidebar />
+
+          <div className="min-w-0 flex-1">
+            {children}
+          </div>
+        </div>
+      </body>
     </html>
   );
 }

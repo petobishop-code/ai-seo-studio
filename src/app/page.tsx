@@ -1,10 +1,13 @@
-import AppShell from "@/components/layout/app-shell";
+import { DashboardPage } from "@/features/dashboard/dashboard-page";
 import ProjectPage from "@/features/projects/project-page";
+import SitePublisher from "@/features/publisher/site-publisher";
 
 export default function Home() {
   return (
-    <AppShell>
+    <main className="space-y-6 p-8">
+      <DashboardPage />
+      <SitePublisher />
       <ProjectPage />
-    </AppShell>
+    </main>
   );
 }
