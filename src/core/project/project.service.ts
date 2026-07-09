@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+﻿import { randomUUID } from "crypto";
 import { addProject } from "./project.store";
 import { Project } from "./project.types";
 
@@ -8,12 +8,13 @@ export function createProject(data: {
   repository: string;
   mainKeyword: string;
   industry: string;
+  brandName: string;
+  brandSlug: string;
+  phone: string;
 }) {
   const project: Project = {
     id: randomUUID(),
-
     createdAt: new Date().toISOString(),
-
     ...data,
   };
 

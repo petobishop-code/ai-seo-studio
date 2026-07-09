@@ -149,3 +149,17 @@ select {
     @apply font-sans;
   }
 }
+select {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.85);
+  color: #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  outline: none;
+}
+
+select option {
+  background: #020617;
+  color: #e5e7eb;
+}
