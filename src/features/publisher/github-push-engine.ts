@@ -1,4 +1,4 @@
-﻿import { cp, mkdir, rm } from "fs/promises";
+import { cp, mkdir, rm } from "fs/promises";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import path from "path";
@@ -20,15 +20,13 @@ function safeFolderName(value: string) {
     .replace(/\s+/g, "-");
 }
 
-function getBrandSlug(brandName?: string) {
-  const brand = (brandName || "").trim();
-
-  const brandMap: Record<string, string> = {
-    "수리남": "surinam",
-    "수리남케어": "surinamcare",
-  };
-
-  return brandMap[brand] || "brand";
+function normalizeSlug(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 function getServiceSlug(siteName: string, industry?: string) {
@@ -39,7 +37,6 @@ function getServiceSlug(siteName: string, industry?: string) {
   if (industry?.includes("대출")) return "loan";
   if (industry?.includes("웨딩")) return "wedding";
   if (industry?.includes("병원")) return "medical";
-
   return "site";
 }
 
@@ -52,34 +49,38 @@ function getRegionSlug(siteName: string) {
     .trim();
 
   const regionMap: Record<string, string> = {
-    "창원": "changwon",
-    "부산": "busan",
-    "인천": "incheon",
-    "강남": "gangnam",
-    "서초": "seocho",
-    "송파": "songpa",
-    "김포": "gimpo",
-    "일산": "ilsan",
-    "동탄": "dongtan",
-    "안양": "anyang",
-    "광명": "gwangmyeong",
-    "수원": "suwon",
-    "대전": "daejeon",
-    "대구": "daegu",
-    "김해": "gimhae",
-    "마산": "masan",
-    "진해": "jinhae",
+    창원: "changwon",
+    부산: "busan",
+    인천: "incheon",
+    강남: "gangnam",
+    서초: "seocho",
+    송파: "songpa",
+    김포: "gimpo",
+    일산: "ilsan",
+    동탄: "dongtan",
+    안양: "anyang",
+    광명: "gwangmyeong",
+    수원: "suwon",
+    대전: "daejeon",
+    대구: "daegu",
+    김해: "gimhae",
+    마산: "masan",
+    진해: "jinhae",
   };
 
   return regionMap[region] || "local";
 }
 
-function createRepoName(input: GithubPushInput) {
-  const brand = input.brandSlug || getBrandSlug(input.brandName);
+export function createRepositoryName(input: {
+  siteName: string;
+  brandSlug?: string;
+  industry?: string;
+}) {
+  const brand = normalizeSlug(input.brandSlug || "brand");
   const service = getServiceSlug(input.siteName, input.industry);
   const region = getRegionSlug(input.siteName);
 
-  return `${brand}-${service}-${region}`.toLowerCase();
+  return `${brand}-${service}-${region}`;
 }
 
 async function runGit(args: string[], cwd: string) {
@@ -93,11 +94,13 @@ async function getGithubRepository(repoName: string) {
   if (!token) throw new Error("GITHUB_TOKEN이 .env.local에 없습니다.");
   if (!owner) throw new Error("GITHUB_OWNER가 .env.local에 없습니다.");
 
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/vnd.github+json",
+  };
+
   const check = await fetch(`https://api.github.com/repos/${owner}/${repoName}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
-    },
+    headers,
   });
 
   if (check.ok) {
@@ -113,8 +116,7 @@ async function getGithubRepository(repoName: string) {
   const create = await fetch("https://api.github.com/user/repos", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
+      ...headers,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -141,17 +143,18 @@ async function getGithubRepository(repoName: string) {
 
 export async function prepareGithubPublish(input: GithubPushInput) {
   const folderName = safeFolderName(input.siteName);
-  const repoName = createRepoName(input);
+  const repoName = createRepositoryName({
+    siteName: input.siteName,
+    brandSlug: input.brandSlug,
+    industry: input.industry,
+  });
 
   const publishRoot = path.join(process.cwd(), "publish-ready");
   const publishDir = path.join(publishRoot, folderName);
 
   await rm(publishDir, { recursive: true, force: true });
   await mkdir(publishDir, { recursive: true });
-
-  await cp(input.sourceDir, publishDir, {
-    recursive: true,
-  });
+  await cp(input.sourceDir, publishDir, { recursive: true });
 
   const githubRepo = await getGithubRepository(repoName);
 
@@ -160,14 +163,20 @@ export async function prepareGithubPublish(input: GithubPushInput) {
   await runGit(["add", "."], publishDir);
 
   try {
-    await runGit(["commit", "-m", `site: ${input.siteName} initial publish`], publishDir);
+    await runGit(
+      ["commit", "-m", `site: ${input.siteName} publish`],
+      publishDir
+    );
   } catch {
     // 변경사항이 없으면 커밋 생략
   }
 
   await runGit(["remote", "add", "origin", githubRepo.pushUrl], publishDir);
   await runGit(["push", "-u", "origin", "main", "--force"], publishDir);
-  await runGit(["remote", "set-url", "origin", githubRepo.cloneUrl], publishDir);
+  await runGit(
+    ["remote", "set-url", "origin", githubRepo.cloneUrl],
+    publishDir
+  );
 
   return {
     siteName: input.siteName,
@@ -180,4 +189,3 @@ export async function prepareGithubPublish(input: GithubPushInput) {
     repositoryReused: githubRepo.reused,
   };
 }
-

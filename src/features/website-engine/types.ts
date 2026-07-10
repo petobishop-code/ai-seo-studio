@@ -1,8 +1,9 @@
-export type WebsiteInput = {
+﻿export type WebsiteInput = {
   mainKeyword: string;
   industry?: string;
   brandName?: string;
   phone?: string;
+  siteUrl?: string;
 };
 
 export type SiteFile = {
@@ -27,4 +28,6 @@ export type WebsiteInfo = {
   industry: string;
   brandName: string;
   phone: string;
+  siteUrl?: string;
 };
+

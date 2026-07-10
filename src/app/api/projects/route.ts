@@ -1,10 +1,13 @@
-﻿import { mkdir, rm, writeFile } from "fs/promises";
+import { mkdir, rm, writeFile } from "fs/promises";
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { createProject } from "@/core/project/project.service";
 import { getProjects } from "@/core/project/project.store";
 import { createWebsite } from "@/lib/website-template";
-import { prepareGithubPublish } from "@/features/publisher/github-push-engine";
+import {
+  createRepositoryName,
+  prepareGithubPublish,
+} from "@/features/publisher/github-push-engine";
 import { createVercelProject } from "@/features/deploy-engine/vercel-deploy-engine";
 
 export async function GET() {
@@ -32,11 +35,20 @@ export async function POST(request: NextRequest) {
     phone: body.phone,
   });
 
+  const repositoryName = createRepositoryName({
+    siteName: project.name,
+    brandSlug: project.brandSlug,
+    industry: project.industry,
+  });
+
+  const siteUrl = `https://${repositoryName}.vercel.app`;
+
   const website = createWebsite({
     mainKeyword: project.mainKeyword,
     industry: project.industry,
     brandName: project.brandName,
     phone: project.phone,
+    siteUrl,
   });
 
   const folderName = safeFolderName(project.name);
@@ -60,7 +72,6 @@ export async function POST(request: NextRequest) {
   });
 
   const owner = process.env.GITHUB_OWNER;
-
   if (!owner) {
     throw new Error("GITHUB_OWNER가 .env.local에 없습니다.");
   }
@@ -74,6 +85,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     ...project,
+    siteUrl,
     generatedSitePath: `generated-sites/${folderName}`,
     publishPath: publish.publishPath,
     repositoryName: publish.repositoryName,
@@ -87,4 +99,3 @@ export async function POST(request: NextRequest) {
     variant: website.variant,
   });
 }
-

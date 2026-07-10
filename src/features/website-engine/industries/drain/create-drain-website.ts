@@ -1,4 +1,10 @@
-import { SiteFile, WebsiteInput, WebsiteInfo, WebsiteResult } from "../../types";
+import { createSeoData } from "../../../seo-engine/create-seo-data";
+import type {
+  SiteFile,
+  WebsiteInfo,
+  WebsiteInput,
+  WebsiteResult,
+} from "../../types";
 
 function detectService(keyword: string) {
   if (keyword.includes("싱크대")) return "싱크대막힘";
@@ -24,6 +30,7 @@ function analyze(input: WebsiteInput): WebsiteInfo {
     industry: input.industry || "하수구/배관",
     brandName: input.brandName || `${keyword} 전문센터`,
     phone: input.phone || "010-7601-1156",
+    siteUrl: input.siteUrl,
   };
 }
 
@@ -49,14 +56,27 @@ a{text-decoration:none;color:inherit}
 `;
 }
 
-function layout(info: WebsiteInfo, title: string, body: string) {
+function layout(
+  info: WebsiteInfo,
+  title: string,
+  description: string,
+  canonicalUrl: string,
+  organizationSchema: string,
+  body: string
+) {
   return `<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${title}</title>
-<meta name="description" content="${title} 전문 ${info.brandName}. ${info.phone}">
+<meta name="description" content="${description}">
+<link rel="canonical" href="${canonicalUrl}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="${title}">
+<meta property="og:description" content="${description}">
+<meta property="og:url" content="${canonicalUrl}">
+<script type="application/ld+json">${organizationSchema}</script>
 <style>${style()}</style>
 </head>
 <body>
@@ -65,7 +85,7 @@ function layout(info: WebsiteInfo, title: string, body: string) {
   <p>${info.brandName} | ${info.phone}</p>
 </header>
 <nav class="nav">
-  <a href="/index.html">홈</a>
+  <a href="/">홈</a>
   <a href="/drain.html">하수구막힘</a>
   <a href="/sink.html">싱크대막힘</a>
   <a href="/toilet.html">변기막힘</a>
@@ -80,11 +100,8 @@ ${body}
 </html>`;
 }
 
-function home(info: WebsiteInfo) {
-  return layout(
-    info,
-    info.keyword,
-    `
+function homeBody(info: WebsiteInfo) {
+  return `
 <section class="section">
   <div class="grid">
     <div class="card"><h3>${info.service}</h3><p>${info.region} 지역 배관 막힘 문제를 빠르게 확인합니다.</p></div>
@@ -98,15 +115,11 @@ function home(info: WebsiteInfo) {
     <p>지금 바로 ${info.brandName}에 상담하세요.</p>
     <a class="btn" href="tel:${info.phone}">전화 ${info.phone}</a>
   </div>
-</section>`
-  );
+</section>`;
 }
 
-function subPage(info: WebsiteInfo, title: string) {
-  return layout(
-    info,
-    title,
-    `
+function subPageBody(info: WebsiteInfo, title: string) {
+  return `
 <section class="section">
   <div class="card">
     <h2>${title}</h2>
@@ -119,57 +132,115 @@ function subPage(info: WebsiteInfo, title: string) {
     <h2>빠른 상담</h2>
     <a class="btn" href="tel:${info.phone}">전화 ${info.phone}</a>
   </div>
-</section>`
-  );
-}
-
-function sitemap(files: string[]) {
-  const today = new Date().toISOString().slice(0, 10);
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${files
-  .map(
-    (file) =>
-      `  <url><loc>https://example.com/${file === "index.html" ? "" : file}</loc><lastmod>${today}</lastmod></url>`
-  )
-  .join("\n")}
-</urlset>`;
+</section>`;
 }
 
 export function createDrainWebsite(input: WebsiteInput): WebsiteResult {
   const info = analyze(input);
 
-  const files: SiteFile[] = [
-    { name: "index.html", content: home(info) },
-    { name: "drain.html", content: subPage(info, `${info.region}하수구막힘`) },
-    { name: "sink.html", content: subPage(info, `${info.region}싱크대막힘`) },
-    { name: "toilet.html", content: subPage(info, `${info.region}변기막힘`) },
-    { name: "contact.html", content: subPage(info, `${info.keyword} 고객문의`) },
+  const definitions = [
+    {
+      fileName: "index.html",
+      title: `${info.keyword} | ${info.brandName}`,
+      description: `${info.keyword} 전문 ${info.brandName}. ${info.region} 하수구·싱크대·변기 막힘 상담 ${info.phone}`,
+    },
+    {
+      fileName: "drain.html",
+      title: `${info.region}하수구막힘 | ${info.brandName}`,
+      description: `${info.region}하수구막힘 원인 점검과 현장 작업 안내. 상담 ${info.phone}`,
+    },
+    {
+      fileName: "sink.html",
+      title: `${info.region}싱크대막힘 | ${info.brandName}`,
+      description: `${info.region}싱크대막힘과 주방 배수 문제 상담. ${info.brandName} ${info.phone}`,
+    },
+    {
+      fileName: "toilet.html",
+      title: `${info.region}변기막힘 | ${info.brandName}`,
+      description: `${info.region}변기막힘 긴급 점검과 상담 안내. ${info.phone}`,
+    },
+    {
+      fileName: "contact.html",
+      title: `${info.keyword} 고객문의 | ${info.brandName}`,
+      description: `${info.keyword} 전화 상담과 문의 안내. ${info.phone}`,
+    },
   ];
 
-  const fileNames = files.map((file) => file.name);
+  const seo = createSeoData(
+    {
+      siteName: info.keyword,
+      siteUrl: info.siteUrl,
+      brandName: info.brandName,
+      phone: info.phone,
+      industry: info.industry,
+      region: info.region,
+      service: info.service,
+    },
+    definitions
+  );
 
-  files.push({
-    name: "robots.txt",
-    content: `User-agent: *
-Allow: /
+  const pageByName = new Map(seo.pages.map((page) => [page.fileName, page]));
 
-Sitemap: https://example.com/sitemap.xml`,
-  });
+  const renderPage = (fileName: string, body: string) => {
+    const page = pageByName.get(fileName);
+    if (!page) {
+      throw new Error(`SEO 페이지 정의를 찾을 수 없습니다: ${fileName}`);
+    }
 
-  files.push({
-    name: "sitemap.xml",
-    content: sitemap(fileNames),
-  });
+    return layout(
+      info,
+      page.title,
+      page.description,
+      page.canonicalUrl,
+      seo.organizationSchema,
+      body
+    );
+  };
+
+  const files: SiteFile[] = [
+    {
+      name: "index.html",
+      content: renderPage("index.html", homeBody(info)),
+    },
+    {
+      name: "drain.html",
+      content: renderPage(
+        "drain.html",
+        subPageBody(info, `${info.region}하수구막힘`)
+      ),
+    },
+    {
+      name: "sink.html",
+      content: renderPage(
+        "sink.html",
+        subPageBody(info, `${info.region}싱크대막힘`)
+      ),
+    },
+    {
+      name: "toilet.html",
+      content: renderPage(
+        "toilet.html",
+        subPageBody(info, `${info.region}변기막힘`)
+      ),
+    },
+    {
+      name: "contact.html",
+      content: renderPage(
+        "contact.html",
+        subPageBody(info, `${info.keyword} 고객문의`)
+      ),
+    },
+    { name: "robots.txt", content: seo.robots },
+    { name: "sitemap.xml", content: seo.sitemap },
+  ];
 
   return {
     indexHtml: files[0].content,
-    sitemap: files.find((file) => file.name === "sitemap.xml")?.content || "",
-    robots: files.find((file) => file.name === "robots.txt")?.content || "",
+    sitemap: seo.sitemap,
+    robots: seo.robots,
     pages: files.map((file) => file.name),
     files,
-    score: 90,
-    variant: "drain-basic",
+    score: 95,
+    variant: "drain-seo-v1",
   };
 }
