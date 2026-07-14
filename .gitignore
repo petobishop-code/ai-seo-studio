@@ -42,4 +42,13 @@ next-env.d.ts
 
 /src/generated/prisma
 
+# 생성 산출물 — 사이트를 만들 때마다 재생성되므로 커밋하지 않는다.
 publish-ready/
+generated-sites/
+review-ready/
+data/review-projects/
+
+# 이미지 원본(38MB). 웹용 변환본은 site-assets/ 에 커밋되므로 원본은 로컬에만 둔다.
+# 변환: node scripts/optimize-images.mjs
+/하수구 사진/
+/하수구 배너 사진/

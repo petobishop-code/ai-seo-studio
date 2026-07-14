@@ -1,5 +1,6 @@
 import { DashboardPage } from "@/features/dashboard/dashboard-page";
 import ProjectWizard from "@/features/project-wizard/project-wizard";
+import PagesManager from "@/features/pages-manager/pages-manager";
 import WebsiteBuilder from "@/features/website-builder/website-builder";
 import SitePublisher from "@/features/publisher/site-publisher";
 import SiteList from "@/features/sites/site-list";
@@ -11,6 +12,7 @@ export default function Home() {
     <main className="space-y-6 p-8">
       <DashboardPage />
       <ProjectWizard />
+      <PagesManager />
       <ReviewPanel />
       <WebsiteBuilder />
       <SitePublisher />

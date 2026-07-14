@@ -11,6 +11,7 @@ export function createProject(data: {
   brandName: string;
   brandSlug: string;
   phone: string;
+  kakaoId: string;
 }) {
   const project: Project = {
     id: randomUUID(),

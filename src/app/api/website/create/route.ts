@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
+import { cp, mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { createWebsite } from "@/lib/website-template";
+import { listSiteAssets, siteAssetPath } from "@/features/website-engine/assets";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const mainKeyword = String(body.mainKeyword || "").trim();
+    const industry = String(body.industry || "하수구/배관");
+    const brandSlug = String(body.brandSlug || "").trim();
 
     if (!mainKeyword) {
       return NextResponse.json(
@@ -15,20 +18,43 @@ export async function POST(request: Request) {
       );
     }
 
-    const website = createWebsite({ mainKeyword });
+    const assets = await listSiteAssets(industry, brandSlug);
+
+    const website = createWebsite({
+      mainKeyword,
+      industry,
+      brandSlug: brandSlug || undefined,
+      assets,
+    });
+
     const root = path.join(process.cwd(), "generated-sites", mainKeyword);
 
-    await fs.mkdir(root, { recursive: true });
-    await fs.mkdir(path.join(root, "images"), { recursive: true });
+    await mkdir(root, { recursive: true });
 
     for (const file of website.files) {
-      await fs.writeFile(path.join(root, file.name), file.content, "utf-8");
+      await writeFile(path.join(root, file.name), file.content, "utf-8");
+    }
+
+    // 미리보기에서도 이미지가 보이도록 함께 복사한다.
+    const imageJobs: Array<[string, string]> = [
+      [assets.bannerSource, "banner"],
+      [assets.gallerySource, "gallery"],
+    ];
+
+    for (const [source, kind] of imageJobs) {
+      if (!source) continue;
+
+      await cp(siteAssetPath(source), path.join(root, "images", kind), {
+        recursive: true,
+      });
     }
 
     return NextResponse.json({
       success: true,
       folder: root,
       files: website.files.map((file) => file.name),
+      banners: assets.banners.length,
+      gallery: assets.gallery.length,
     });
   } catch (error) {
     console.error(error);
