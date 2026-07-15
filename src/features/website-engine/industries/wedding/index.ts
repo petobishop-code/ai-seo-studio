@@ -22,7 +22,7 @@ function parseRegion(keyword: string) {
 
 function homeBody(manifest: SiteManifest) {
   const hero = manifest.assets?.heroImageSource
-    ? `<img src="/images/hero.webp" alt="${manifest.brandName} 대표 이미지" width="1600" height="520">`
+    ? `<img src="/images/hero.webp" alt="${manifest.brandName} 대표 이미지" width="1600" height="900">`
     : heroSvg();
 
   return `
