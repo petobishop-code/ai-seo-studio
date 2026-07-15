@@ -1,4 +1,8 @@
-import { getWeddingEvents, type WeddingEvent } from "./wedding-events";
+import {
+  MAIN_APPLY_LINK,
+  WEDDING_CATALOG,
+  type WeddingEvent,
+} from "./wedding-events";
 import type { SiteManifest, SitePageMeta } from "../../types";
 
 /** 방문 전 체크리스트 (weddingbusan 구조 참고) */
@@ -38,7 +42,7 @@ const FAQ = [
   },
   {
     q: "무료초대권은 어떻게 신청하나요?",
-    a: "사전 신청 후 방문하시면 됩니다. 초대권 없이 현장 방문도 가능하지만, 사전 신청자에게만 제공되는 사은품과 상담 우선권이 있는 경우가 많습니다.",
+    a: "원하는 박람회의 신청하기 버튼을 누르면 바로 신청 페이지로 연결됩니다. 사전 신청자에게만 제공되는 사은품과 상담 우선권이 있는 경우가 많습니다.",
   },
   {
     q: "박람회에서 바로 계약해야 하나요?",
@@ -54,27 +58,41 @@ const FAQ = [
   },
   {
     q: "혼수·가전 혜택도 받을 수 있나요?",
-    a: "박람회에 따라 혼수 선불카드나 가전 할인 혜택을 제공합니다. 예식 계약과 별개로 진행되는 경우가 많으니 상담 시 조건을 확인하세요.",
+    a: "박람회에 따라 혼수 선불카드나 가전 할인 혜택을 제공합니다. 예식 계약과 별개로 진행되는 경우가 많으니 신청 후 상담 시 조건을 확인하세요.",
   },
 ];
 
-function eventCard(event: WeddingEvent) {
-  const benefits = event.benefits
-    .map((benefit) => `        <li>${benefit}</li>`)
-    .join("\n");
+function fairCard(event: WeddingEvent) {
+  return `      <a class="fair-card" href="${event.link}" target="_blank" rel="noopener noreferrer">
+        <span class="fair-name">${event.name}</span>
+        <span class="fair-apply">무료신청 →</span>
+      </a>`;
+}
 
-  return `    <article class="event-card">
-      <h3>${event.name}</h3>
-      <dl class="event-meta">
-        <div><dt>장소</dt><dd>${event.venue}</dd></div>
-        <div><dt>주소</dt><dd>${event.address}</dd></div>
-        <div><dt>일정</dt><dd>${event.date}</dd></div>
-      </dl>
-      <p class="event-benefit-title">✨ 프로모션 특전</p>
-      <ul class="event-benefits">
-${benefits}
-      </ul>
-    </article>`;
+/** 지역별 박람회 링크 목록. 홈과 키워드 페이지가 공유한다(.section 으로 폭·여백 통일). */
+export function renderCatalog(): string {
+  return WEDDING_CATALOG.map(
+    (group) => `
+<section class="section">
+  <h2 class="cat-title">${group.region}</h2>
+  <div class="fair-grid">
+${group.events.map(fairCard).join("\n")}
+  </div>
+</section>`
+  ).join("\n");
+}
+
+/** 메인 상단의 대표 신청 배너. 대표 링크로 바로 연결한다. */
+export function renderApplyHero(heading: string): string {
+  return `
+<section class="section">
+  <div class="cta apply-hero">
+    <p class="cta-eyebrow">FREE APPLICATION</p>
+    <h2>${heading}</h2>
+    <p>버튼을 누르면 바로 무료 신청 페이지로 연결됩니다.</p>
+    <a class="btn btn-apply" href="${MAIN_APPLY_LINK}" target="_blank" rel="noopener noreferrer">웨딩박람회 무료 신청하기 →</a>
+  </div>
+</section>`;
 }
 
 function checklistSection(kw: string) {
@@ -89,7 +107,7 @@ ${group.items.map((item) => `        <li>${item}</li>`).join("\n")}
 
   return `
   <section class="block">
-    <h2>📋 ${kw} 방문 전 체크리스트</h2>
+    <h2>${kw} 방문 전 체크리스트</h2>
     <p>상담 전에 아래 항목만 확인해도 계약 후 후회할 일이 크게 줄어듭니다.</p>
     <div class="checklist">
 ${groups}
@@ -112,40 +130,28 @@ ${items}
   </section>`;
 }
 
-/** 웨딩박람회 페이지 본문. 목록 → 체크리스트 → FAQ → CTA 순서. */
+/** 웨딩박람회 키워드 페이지 본문. 대표 신청 → 지역별 목록 → 체크리스트 → FAQ. */
 export function renderArticle(
-  manifest: SiteManifest,
+  _manifest: SiteManifest,
   page: SitePageMeta
 ): string {
   const kw = page.keyword;
-  const events = getWeddingEvents(page.region);
-
-  const cards = events.map(eventCard).join("\n");
 
   return `
+${renderApplyHero(`${page.region} 웨딩박람회 무료 신청`)}
 <article class="article section">
   <section class="block">
-    <h2>${kw} 일정 안내</h2>
-    <p>${page.region} 지역에서 열리는 웨딩박람회 일정과 참여 업체, 프로모션 특전을 정리했습니다. 무료초대권을 신청하면 사전 상담 예약과 사은품을 함께 받을 수 있습니다.</p>
+    <h2>${kw} 안내</h2>
+    <p>${page.region}·경남 지역에서 열리는 웨딩박람회를 한곳에 모았습니다. 원하는 박람회의 무료신청 버튼을 누르면 바로 신청 페이지로 연결됩니다. 사전 신청 시 무료초대권과 사은품을 함께 받을 수 있습니다.</p>
   </section>
-
+</article>
+${renderCatalog()}
+<article class="article section">
   <section class="block">
-    <h2>${page.region} 웨딩박람회 목록</h2>
-    <div class="event-grid">
-${cards}
-    </div>
-    <p class="event-note">※ 일정과 특전은 주최사 사정에 따라 변경될 수 있습니다. 방문 전 확인해주세요.</p>
+    <p class="fair-note">※ 박람회 일정과 특전은 주최사 사정에 따라 변경될 수 있습니다. 신청 페이지에서 최신 정보를 확인해주세요.</p>
   </section>
 ${checklistSection(kw)}
 ${faqSection(kw)}
-
-  <section class="block">
-    <div class="cta">
-      <h2>💌 ${kw} 무료초대권 신청</h2>
-      <p>사전 신청하시면 상담 예약과 사은품을 함께 안내해드립니다.</p>
-      <a class="btn" href="tel:${manifest.phone}">전화 신청 ${manifest.phone}</a>
-    </div>
-  </section>
 </article>`;
 }
 
@@ -153,67 +159,97 @@ ${faqSection(kw)}
  * 웨딩 업종 전용 CSS.
  *
  * 공용 style() 뒤에 붙으므로 기본 테마(하수구용 남색/슬레이트)를 통째로 덮는다.
- * 헤더·내비·푸터까지 바꾸지 않으면 액센트만 핑크인 칙칙한 화면이 된다.
+ * 고급 호텔 청첩장 톤: 샴페인 아이보리 · 딥 와인 · 앤티크 골드, 명조 제목.
  */
 export const weddingStyles = `
-body{background:linear-gradient(180deg,#fff5f9 0%,#fdf2f8 100%);color:#4a2338}
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@300;400;500&display=swap');
 
-.header{background:linear-gradient(135deg,#fb7fc0 0%,#ec4899 45%,#be185d 100%)}
-.header h1{text-shadow:0 3px 16px rgba(131,24,67,.35)}
-.header .services{color:#ffe9f3}
-.header .notice{color:#fdd7ea}
+:root{
+  --ivory:#F7F1E6; --paper:#FFFDF8; --wine:#3C1F2B; --wine-deep:#2A1420;
+  --gold:#A9843E; --gold-2:#C6A867; --gold-line:rgba(169,132,62,.32);
+  --ink:#33272B; --muted:#8A7A6E;
+}
 
-.nav{background:#fff;color:#9d174d;border-bottom:2px solid #fbcfe8;box-shadow:0 6px 22px rgba(190,24,93,.07)}
-.nav a{color:#9d174d}
-.nav a:hover{color:#ec4899}
-.nav-more{border-color:#ec4899;color:#be185d}
-.nav-more:hover{background:#ec4899;color:#fff}
+body{background:var(--ivory);color:var(--ink);font-family:'Noto Sans KR',sans-serif;font-weight:400}
 
-.banner-strip a{box-shadow:0 16px 40px rgba(190,24,93,.16)}
+/* HEADER — 골드 헤어라인 액자 청첩장 */
+.header{position:relative;background:radial-gradient(130% 150% at 50% -30%, #53303F 0%, var(--wine) 55%, var(--wine-deep) 100%);color:#F3E6D5;padding:66px 24px 58px}
+.header::before{content:"";position:absolute;inset:16px;border:1px solid rgba(198,168,103,.45);pointer-events:none}
+.header h1{font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:46px;letter-spacing:.02em;margin:0;color:#F6ECDC;text-shadow:0 2px 20px rgba(0,0,0,.3)}
+.header h1::after{content:"\\25C6";display:block;color:var(--gold-2);font-size:11px;margin:20px 0 16px}
+.header .services{font-size:14px;font-weight:400;letter-spacing:.32em;color:var(--gold-2);margin:0 0 12px}
+.header .notice{font-size:15px;color:#D8C4B2;margin:0 0 28px;font-weight:300}
+.header-cta{gap:14px}
+.btn-call,.btn-kakao{border-radius:1px;font-family:'Noto Sans KR',sans-serif;font-weight:500;font-size:15px;letter-spacing:.06em;padding:15px 30px}
+.btn-call{background:var(--gold);color:var(--wine-deep);border:1px solid var(--gold);box-shadow:none}
+.btn-call:hover{background:var(--gold-2);transform:translateY(-1px)}
+.btn-kakao{background:transparent;color:#F3E6D5;border:1px solid rgba(198,168,103,.55)}
+.btn-kakao:hover{background:rgba(198,168,103,.14)}
 
-.card{border-color:#f9d3e3;box-shadow:0 14px 36px rgba(190,24,93,.10)}
-.card h3{color:#9d174d}
-.card p{color:#6b4356}
+/* NAV */
+.nav{background:var(--ivory);color:var(--wine);border-top:1px solid var(--gold-line);border-bottom:1px solid var(--gold-line);box-shadow:none;padding:16px 20px}
+.nav a{color:var(--wine);font-size:14px;letter-spacing:.08em;font-weight:500;margin:6px 14px}
+.nav a:hover{color:var(--gold)}
+.nav-more{border:1px solid var(--gold);color:var(--gold);border-radius:1px}
+.nav-more:hover{background:var(--gold);color:#fff}
 
-.article h2{color:#831843;border-bottom-color:#ec4899}
-.article h3{color:#be185d}
-.article p{color:#5f3a4c}
+.banner-strip a,.banner-strip .banner-item{border-radius:2px;box-shadow:0 18px 44px rgba(60,31,43,.16)}
 
-.cta{background:linear-gradient(135deg,#f472b6,#be185d);box-shadow:0 22px 55px rgba(190,24,93,.30)}
-.cta p{color:#ffeaf4}
-.btn{background:#fff;color:#be185d}
-.btn:hover{background:#fff0f6}
+/* 홈 카드 */
+.card{background:var(--paper);border:1px solid var(--gold-line);border-radius:2px;box-shadow:0 18px 44px rgba(60,31,43,.06)}
+.card h3{font-family:'Nanum Myeongjo',serif;font-weight:700;color:var(--wine)}
+.card p{color:var(--muted);font-weight:300}
+.home-title{font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:30px;color:var(--wine);margin:0 0 12px;letter-spacing:.01em}
+.home-title::after{content:"";display:block;width:44px;height:1.5px;background:var(--gold);margin:16px 0 0}
+.home-sub{color:var(--muted);margin:0 0 30px;font-weight:300}
 
-/* 헤더가 핑크라 전화 버튼도 핑크면 묻힌다. 흰 버튼으로 대비를 준다. */
-.btn-call{background:#fff;color:#be185d;box-shadow:0 10px 28px rgba(131,24,67,.32)}
-.btn-call:hover{background:#fff0f6}
+/* ARTICLE 조판 */
+.article h2{font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:29px;color:var(--wine);padding-bottom:0;border-bottom:0;letter-spacing:.01em}
+.article h2::after{content:"";display:block;width:44px;height:1.5px;background:var(--gold);margin-top:16px}
+.article h3{font-family:'Nanum Myeongjo',serif;color:var(--gold);font-weight:700}
+.article p{color:var(--ink);font-weight:300;line-height:1.9}
 
-.link-card{border-color:#f9d3e3;color:#9d174d;box-shadow:0 10px 24px rgba(190,24,93,.08)}
-.link-card:hover{border-color:#ec4899}
-.link-card span{color:#a4778a}
-.region-block h3{color:#831843}
+/* 박람회 링크 카드 */
+.cat-title{font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:29px;color:var(--wine);margin:0 0 22px;letter-spacing:.01em}
+.cat-title::after{content:"";display:block;width:44px;height:1.5px;background:var(--gold);margin-top:16px}
+.fair-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.fair-card{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--paper);border:1px solid var(--gold-line);border-left:3px solid var(--gold);border-radius:2px;padding:22px 24px;box-shadow:0 12px 30px rgba(60,31,43,.06);transition:transform .15s,box-shadow .15s,border-color .15s}
+.fair-card:hover{transform:translateY(-2px);box-shadow:0 20px 44px rgba(60,31,43,.14);border-left-color:var(--gold-2)}
+.fair-name{font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:18px;color:var(--wine)}
+.fair-apply{flex:0 0 auto;font-size:13px;font-weight:500;letter-spacing:.04em;color:var(--gold);white-space:nowrap}
+.fair-card:hover .fair-apply{color:var(--wine)}
+.fair-note{color:var(--muted);font-weight:300;font-size:14px}
 
-.footer{background:linear-gradient(135deg,#831843,#4c0519);color:#fbcfe8}
-.event-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
-.event-card{background:linear-gradient(180deg,#fff 0%,#fff7fb 100%);border:1px solid #f7cfe1;border-radius:22px;padding:24px;box-shadow:0 14px 34px rgba(190,24,93,.11)}
-.event-card h3{font-size:21px;margin:0 0 14px;color:#9d174d}
-.event-meta{margin:0 0 16px;font-size:15px}
-.event-meta div{display:flex;gap:10px;padding:5px 0;border-bottom:1px dashed #f1e0e8}
-.event-meta dt{flex:0 0 44px;font-weight:800;color:#9d174d}
-.event-meta dd{margin:0;color:#475569}
-.event-benefit-title{margin:0 0 8px;font-weight:900;color:#be185d}
-.event-benefits{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
-.event-benefits li{background:#fdf2f8;border:1px solid #fbcfe8;border-radius:999px;padding:7px 14px;font-size:14px;font-weight:700;color:#9d174d}
-.event-note{margin-top:16px;font-size:14px;color:#94a3b8}
-.checklist{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.checklist-group{background:#fff;border:1px solid #f7cfe1;border-radius:20px;padding:22px;box-shadow:0 10px 26px rgba(190,24,93,.07)}
-.checklist-group h3{font-size:18px;margin:0 0 12px;color:#be185d}
+/* 체크리스트 */
+.checklist{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.checklist-group{background:var(--paper);border:1px solid var(--gold-line);border-radius:2px;padding:26px 24px;box-shadow:0 14px 34px rgba(60,31,43,.05)}
+.checklist-group h3{font-family:'Nanum Myeongjo',serif;font-size:18px;margin:0 0 16px;color:var(--wine)}
 .checklist-group ul{margin:0;padding:0;list-style:none}
-.checklist-group li{padding:7px 0 7px 24px;position:relative;color:#334155;font-size:15px}
-.checklist-group li::before{content:"☑";position:absolute;left:0;color:#ec4899;font-weight:900}
-.faq-item{background:#fff;border:1px solid #f7cfe1;border-radius:16px;padding:18px 22px;margin-bottom:10px;box-shadow:0 8px 20px rgba(190,24,93,.06)}
-.faq-item summary{cursor:pointer;font-weight:800;font-size:17px;color:#831843}
-.faq-item[open] summary{color:#ec4899}
-.faq-item p{margin:12px 0 0;color:#5f3a4c}
-@media(max-width:800px){.event-grid,.checklist{grid-template-columns:1fr}}
+.checklist-group li{padding:8px 0 8px 22px;position:relative;color:var(--ink);font-size:15px;font-weight:300}
+.checklist-group li::before{content:"\\2713";position:absolute;left:0;top:8px;color:var(--gold);font-size:12px;font-weight:700}
+
+/* FAQ */
+.faq-item{background:transparent;border:0;border-bottom:1px solid var(--gold-line);border-radius:0;padding:22px 2px;margin-bottom:0;box-shadow:none}
+.faq-item summary{cursor:pointer;font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:18px;color:var(--wine);list-style:none}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::before{content:"\\002B";float:right;color:var(--gold);font-weight:400;font-size:20px;line-height:1}
+.faq-item[open] summary::before{content:"\\2212"}
+.faq-item[open] summary{color:var(--gold)}
+.faq-item p{margin:14px 0 0;color:var(--ink);font-weight:300;line-height:1.85}
+
+/* CTA / 대표 신청 배너 */
+.cta{background:linear-gradient(135deg,var(--wine),var(--wine-deep));border-radius:2px;box-shadow:0 26px 60px rgba(42,20,32,.32);position:relative}
+.cta::before{content:"";position:absolute;inset:12px;border:1px solid rgba(198,168,103,.4);pointer-events:none}
+.cta-eyebrow{font-size:12px;letter-spacing:.28em;color:var(--gold-2);margin:0 0 14px}
+.cta h2{font-family:'Nanum Myeongjo',serif;font-weight:700;color:#F6ECDC;border:0}
+.cta h2::after{display:none}
+.cta p{color:#D8C4B2;font-weight:300}
+.btn{background:var(--gold);color:var(--wine-deep);border-radius:1px;font-weight:500;letter-spacing:.05em;padding:15px 32px}
+.btn:hover{background:var(--gold-2)}
+.btn-apply{font-size:16px;padding:17px 38px}
+
+/* FOOTER */
+.footer{background:var(--wine-deep);color:#C9B79E;border-top:1px solid rgba(198,168,103,.4);font-weight:300;letter-spacing:.02em}
+
+@media(max-width:800px){.fair-grid,.checklist{grid-template-columns:1fr}.header h1{font-size:34px}}
 `;

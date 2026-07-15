@@ -1,82 +1,52 @@
 /**
- * 웨딩박람회 목록 데이터 (더미).
+ * 웨딩박람회 목록 — reply-alba 신청 링크 카탈로그.
  *
- * 웨딩 페이지의 본체는 이 목록이다. 지금은 골격 확인용 예시 데이터이고,
- * 실제 운영 시에는 브랜드별 실데이터로 교체해야 한다.
- * (site-assets/brands/{브랜드}/wedding-events.json 로 빼는 방안을 권장)
+ * 지금은 부산웨딩박람회 브랜드의 실데이터를 여기 둔다.
+ * 웨딩 브랜드가 여러 개가 되면 site-assets/brands/{brandSlug}/wedding-events.json 으로
+ * 빼서 브랜드마다 다른 카탈로그를 쓰도록 바꿔야 한다. (지금은 단일 브랜드라 모듈에 둔다.)
  */
 export type WeddingEvent = {
   /** 박람회명 */
   name: string;
-  /** 개최 장소 */
-  venue: string;
-  /** 주소 */
-  address: string;
-  /** 일정 */
-  date: string;
-  /** 특전·혜택 */
-  benefits: string[];
+  /** reply-alba 신청 페이지 링크 */
+  link: string;
 };
 
-const EVENTS: Record<string, WeddingEvent[]> = {
-  부산: [
-    {
-      name: "부산 다이렉트 웨딩박람회",
-      venue: "벡스코 제2전시장",
-      address: "부산 해운대구 APEC로 55",
-      date: "매주 토·일 11:00~18:00",
-      benefits: ["혼수 40만원 선불카드", "예식 페이백 100만원", "스드메 할인"],
-    },
-    {
-      name: "롯데백화점 웨딩박람회",
-      venue: "롯데백화점 부산본점 10층",
-      address: "부산 부산진구 가야대로 772",
-      date: "매월 첫째·셋째 주말",
-      benefits: ["당일 계약 특전", "혼수 가전 할인", "무료 웨딩 컨설팅"],
-    },
-    {
-      name: "W웨딩시티 박람회",
-      venue: "서면 W웨딩시티",
-      address: "부산 부산진구 중앙대로",
-      date: "상시 (사전예약제)",
-      benefits: ["드레스 무료 피팅", "스냅 촬영권", "허니문 상담"],
-    },
-  ],
-  벡스코: [
-    {
-      name: "벡스코 웨딩박람회",
-      venue: "벡스코 제1전시장",
-      address: "부산 해운대구 APEC로 55",
-      date: "매주 토·일 11:00~18:00",
-      benefits: ["최대 규모 부스", "혼수 페이백", "예식장 동시 비교"],
-    },
-    {
-      name: "벡스코 프리미엄 웨딩페어",
-      venue: "벡스코 컨벤션홀",
-      address: "부산 해운대구 APEC로 55",
-      date: "분기별 대형 행사",
-      benefits: ["프리미엄 홀 특가", "스드메 패키지", "웨딩카 지원"],
-    },
-  ],
-  서면: [
-    {
-      name: "서면 웨딩박람회",
-      venue: "서면 웨딩컨벤션",
-      address: "부산 부산진구 서면로",
-      date: "매주 주말 12:00~18:00",
-      benefits: ["도심 접근성", "혼수 선불카드", "당일 계약 할인"],
-    },
-    {
-      name: "서면 스드메 페어",
-      venue: "서면 웨딩거리 일대",
-      address: "부산 부산진구 중앙대로",
-      date: "매월 둘째 주말",
-      benefits: ["스튜디오·드레스·메이크업 비교", "패키지 특가"],
-    },
-  ],
+export type WeddingRegionGroup = {
+  /** 섹션 제목. 예: "부산 웨딩박람회" */
+  region: string;
+  events: WeddingEvent[];
 };
 
-/** 지역/장소에 맞는 박람회 목록. 없으면 부산 기본 목록으로 대체한다. */
-export function getWeddingEvents(region: string): WeddingEvent[] {
-  return EVENTS[region] ?? EVENTS["부산"];
-}
+/** 메인 상단에 바로 연결할 대표 신청 링크 (부산 웨딩박람회) */
+export const MAIN_APPLY_LINK = "https://replyalba.com/pt/LOQI92OJxc";
+
+export const WEDDING_CATALOG: WeddingRegionGroup[] = [
+  {
+    region: "부산 웨딩박람회",
+    events: [
+      { name: "부산 웨딩박람회", link: "https://replyalba.com/pt/LOQI92OJxc" },
+      { name: "부산 KNN 웨딩엑스포", link: "https://replyalba.com/pt/10OMZg0DPSC" },
+      { name: "부산 롯데백화점 웨딩엑스포", link: "https://replyalba.com/pt/YLoADdrbgU" },
+      { name: "부산 W웨딩 신세계센텀 웨딩박람회", link: "https://replyalba.com/pt/IMrka2f2yA" },
+      { name: "부산 W웨딩시티 웨딩박람회", link: "https://replyalba.com/pt/RjM9JP4hdc" },
+      { name: "BWB 부산 벡스코 웨딩박람회", link: "https://replyalba.com/pt/B2VsSropw9" },
+      { name: "부산 더블혜택 웨딩박람회", link: "https://replyalba.com/pt/LOQI92OJxc" },
+      { name: "부산 라모르 웨딩박람회", link: "https://replyalba.com/pt/SO0299MJDg" },
+      { name: "부산 KNN 방송국 웨딩박람회", link: "https://replyalba.com/pt/IIBQpcZBZO" },
+      { name: "부산 찰스 웨딩박람회", link: "https://replyalba.com/pt/YnMW6eOiUJ" },
+      { name: "부산 투어민 허니문초대전", link: "https://replyalba.com/pt/AcePupJWF6" },
+    ],
+  },
+  {
+    region: "경남 웨딩박람회",
+    events: [
+      { name: "울산 롯데백화점 웨딩박람회", link: "https://replyalba.com/pt/D8avXLYA5m" },
+      { name: "울산 반하나 허니문박람회", link: "https://replyalba.com/pt/zSh4LNTEY2" },
+      { name: "창원 롯데백화점 웨딩박람회", link: "https://replyalba.com/pt/ZfXRUhsOCl" },
+      { name: "창원 인터내셔널 호텔 웨딩박람회", link: "https://replyalba.com/pt/FqD0vuXnHV" },
+      { name: "창원 웨딩박람회", link: "https://replyalba.com/pt/L9ITINvvbp" },
+      { name: "창원 프리마베라 웨딩박람회", link: "https://replyalba.com/pt/XtwCqyEBAs" },
+    ],
+  },
+];

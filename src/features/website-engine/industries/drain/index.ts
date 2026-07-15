@@ -1,5 +1,10 @@
 import { renderArticle } from "./drain-content";
-import { groupByRegion, pageHref } from "../../layout";
+import {
+  contactLine,
+  ctaButtonsHtml,
+  groupByRegion,
+  pageHref,
+} from "../../layout";
 import type { IndustryModule } from "../types";
 import type { SiteManifest, SitePageMeta } from "../../types";
 
@@ -64,8 +69,8 @@ ${regionBlocks}
 <section class="section">
   <div class="cta">
     <h2>${manifest.brandName} 상담문의</h2>
-    <p>지금 바로 전화 상담하세요.</p>
-    <a class="btn" href="tel:${manifest.phone}">전화 ${manifest.phone}</a>
+    <p>지금 바로 상담하세요.</p>
+    ${ctaButtonsHtml(manifest)}
   </div>
 </section>`;
 }
@@ -90,7 +95,7 @@ export const drainIndustry: IndustryModule = {
         region,
         service,
         title: `${pageKeyword} | ${manifest.brandName}`,
-        description: `${pageKeyword} 원인 점검과 현장 작업 안내. ${manifest.brandName} 상담 ${manifest.phone}`,
+        description: `${pageKeyword} 원인 점검과 현장 작업 안내. ${manifest.brandName} ${contactLine(manifest)}`,
       };
     });
   },
@@ -100,6 +105,6 @@ export const drainIndustry: IndustryModule = {
 
   homeDescription(manifest) {
     const regions = [...groupByRegion(manifest.pages).keys()].join(" ");
-    return `${manifest.brandName} ${regions} 하수구·싱크대·변기 막힘 상담 ${manifest.phone}`;
+    return `${manifest.brandName} ${regions} 하수구·싱크대·변기 막힘 ${contactLine(manifest)}`;
   },
 };

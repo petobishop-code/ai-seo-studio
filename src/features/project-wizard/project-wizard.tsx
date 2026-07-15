@@ -68,8 +68,13 @@ export default function ProjectWizard() {
   const keywords = parseKeywords(keywordText);
 
   async function create() {
-    if (!keywords.length || !brandName || !brandSlug || !phone) {
-      alert("키워드, 브랜드명, 브랜드 영문명, 연락처를 입력해주세요.");
+    if (!keywords.length || !brandName || !brandSlug) {
+      alert("키워드, 브랜드명, 브랜드 영문명을 입력해주세요.");
+      return;
+    }
+
+    if (!phone.trim() && !kakaoId.trim()) {
+      alert("전화번호 또는 카카오톡 ID 중 하나는 입력해주세요.");
       return;
     }
 
@@ -207,7 +212,9 @@ export default function ProjectWizard() {
         </div>
 
         <div>
-          <label className="mb-2 block text-sm text-slate-300">연락처</label>
+          <label className="mb-2 block text-sm text-slate-300">
+            연락처 <span className="text-slate-500">(선택)</span>
+          </label>
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -227,7 +234,8 @@ export default function ProjectWizard() {
             className="w-full rounded-xl bg-slate-900 p-4"
           />
           <p className="mt-2 text-sm text-slate-500">
-            입력하면 사이트 상단에 카카오톡 상담 버튼이 표시됩니다.
+            전화번호와 카카오톡 중 <span className="font-bold text-slate-300">최소 하나</span>는
+            입력해야 합니다. 입력한 항목만 사이트에 상담 버튼으로 표시됩니다.
           </p>
         </div>
 

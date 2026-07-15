@@ -1,6 +1,8 @@
 import type { SiteFile, SiteManifest, SitePageMeta } from "./types";
 import {
   canonicalUrl,
+  contactLine,
+  ctaButtonsHtml,
   galleryPath,
   groupByRegion,
   layout,
@@ -30,19 +32,26 @@ export function mergeManifest(
 function contactBody(manifest: SiteManifest) {
   const regions = [...groupByRegion(manifest.pages).keys()].join(", ");
 
+  const contactLines = [
+    manifest.phone ? `<p>대표전화: ${manifest.phone}</p>` : "",
+    manifest.kakaoId ? `<p>카카오톡 ID: ${manifest.kakaoId}</p>` : "",
+  ]
+    .filter(Boolean)
+    .join("\n    ");
+
   return `
 <section class="section">
   <div class="card">
     <h2>${manifest.brandName} 고객문의</h2>
-    <p>${manifest.industry} 관련 문의는 전화로 바로 상담 가능합니다.</p>
+    <p>${manifest.industry} 관련 문의는 아래 연락처로 상담 가능합니다.</p>
     <p>서비스 지역: ${regions || "전국"}</p>
-    <p>대표전화: ${manifest.phone}</p>
+    ${contactLines}
   </div>
 </section>
 <section class="section">
   <div class="cta">
     <h2>빠른 상담</h2>
-    <a class="btn" href="tel:${manifest.phone}">전화 ${manifest.phone}</a>
+    ${ctaButtonsHtml(manifest)}
   </div>
 </section>`;
 }
@@ -79,7 +88,7 @@ ${figures}
 <section class="section">
   <div class="cta">
     <h2>작업 문의</h2>
-    <a class="btn" href="tel:${manifest.phone}">전화 ${manifest.phone}</a>
+    ${ctaButtonsHtml(manifest)}
   </div>
 </section>`;
 }
@@ -151,7 +160,7 @@ export function buildBrandFiles(
   const contactHtml = layout({
     ...shared,
     title: `${manifest.brandName} 고객문의`,
-    description: `${manifest.brandName} 전화 상담과 문의 안내. ${manifest.phone}`,
+    description: `${manifest.brandName} 상담과 문의 안내. ${contactLine(manifest)}`,
     canonicalUrl: canonicalUrl(manifest, "contact.html"),
     navHtml: nav(manifest, "contact.html"),
     bannerSeed: `${manifest.brandSlug}-contact`,
@@ -183,7 +192,7 @@ Sitemap: ${base}/sitemap.xml`,
       content: layout({
         ...shared,
         title: `${manifest.brandName} 작업사진`,
-        description: `${manifest.brandName} 현장 작업사진 모음. ${regions} 작업 사례. 상담 ${manifest.phone}`,
+        description: `${manifest.brandName} 현장 작업사진 모음. ${regions} 작업 사례. ${contactLine(manifest)}`,
         canonicalUrl: canonicalUrl(manifest, "gallery.html"),
         navHtml: nav(manifest, "gallery.html"),
         bannerSeed: `${manifest.brandSlug}-gallery`,

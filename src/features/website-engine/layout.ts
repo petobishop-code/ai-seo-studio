@@ -15,6 +15,34 @@ export function bannerPath(fileName: string) {
   return `/images/banner/${fileName}`;
 }
 
+/** 전화 또는 카카오톡 중 있는 연락 수단을 짧은 문구로. meta description 등에 쓴다. */
+export function contactLine(manifest: SiteManifest) {
+  if (manifest.phone) return `상담 ${manifest.phone}`;
+  if (manifest.kakaoId) return `카카오톡 상담 ${manifest.kakaoId}`;
+  return "";
+}
+
+/** 카카오톡 상담 버튼. ID를 클립보드에 복사한다(카톡은 tel: 같은 표준 링크가 없다). */
+export function kakaoButtonHtml(manifest: SiteManifest, cls = "btn-kakao") {
+  if (!manifest.kakaoId) return "";
+
+  return `<button class="${cls}" type="button" onclick="navigator.clipboard.writeText('${manifest.kakaoId}');this.textContent='카카오톡 ID 복사됨 ✓'">카카오톡 ${manifest.kakaoId}</button>`;
+}
+
+/**
+ * 본문/홈 CTA의 연락 버튼. 있는 수단만 렌더링한다.
+ * 전화·카카오 둘 다 없으면 빈 문자열(위저드에서 최소 하나를 강제하므로 실제로는 안 비어야 한다).
+ */
+export function ctaButtonsHtml(manifest: SiteManifest, callLabel = "전화") {
+  const call = manifest.phone
+    ? `<a class="btn" href="tel:${manifest.phone}">${callLabel} ${manifest.phone}</a>`
+    : "";
+
+  const kakao = kakaoButtonHtml(manifest, "btn");
+
+  return [call, kakao].filter(Boolean).join("\n      ");
+}
+
 export function galleryPath(fileName: string) {
   return `/images/gallery/${fileName}`;
 }
@@ -92,6 +120,8 @@ a{text-decoration:none;color:inherit}
 .cta{background:#0ea5e9;color:#fff;border-radius:28px;padding:42px;text-align:center}
 .cta h2{font-size:36px;margin:0 0 10px;color:#fff;border:0}
 .btn{display:inline-block;margin-top:18px;background:#fde047;color:#111;padding:16px 26px;border-radius:999px;font-weight:900}
+button.btn{border:0;cursor:pointer;font-family:inherit;font-size:15px}
+.cta .btn{margin:18px 8px 0}
 .footer{background:#020617;color:#cbd5e1;text-align:center;padding:34px 20px}
 .article{max-width:900px}
 .article .block{margin-bottom:44px}
@@ -202,18 +232,23 @@ export function layout(options: {
   // 배경으로 깔지 않고 원본 그대로 보여주고 전화 링크로 감싼다.
   const banners = pickBanners(manifest, bannerSeed, 2);
 
+  // 배너에 전화번호가 박혀 있어 전화 링크로 감싼다. 전화가 없으면 링크 대신 이미지만.
   const bannerStrip = banners.length
     ? `<section class="banner-strip">
 ${banners
-  .map(
-    (banner, index) => `  <a href="tel:${manifest.phone}">
-    <img src="${bannerPath(banner)}" alt="${
+  .map((banner, index) => {
+    const img = `<img src="${bannerPath(banner)}" alt="${
       heading ?? title
-    } 전화상담 ${index + 1}" width="900" height="820"${
+    } ${index + 1}" width="900" height="820"${
       index === 0 ? "" : ' loading="lazy"'
-    }>
+    }>`;
+
+    return manifest.phone
+      ? `  <a href="tel:${manifest.phone}">
+    ${img}
   </a>`
-  )
+      : `  <span class="banner-item">${img}</span>`;
+  })
   .join("\n")}
 </section>
 `
@@ -226,11 +261,14 @@ ${banners
       )}${bannerPath(banners[0])}">`
     : "";
 
-  // 카카오톡은 ID라서 tel: 처럼 바로 여는 링크가 없다. 눌러서 ID를 복사하게 한다.
-  const kakaoButton = manifest.kakaoId
-    ? `
-    <button class="btn-kakao" type="button" onclick="navigator.clipboard.writeText('${manifest.kakaoId}');this.textContent='카카오톡 ID 복사됨 ✓'">카카오톡 ${manifest.kakaoId}</button>`
+  const callButton = manifest.phone
+    ? `<a class="btn-call" href="tel:${manifest.phone}">전화상담 ${manifest.phone}</a>`
     : "";
+
+  const kakaoButton = kakaoButtonHtml(manifest);
+
+  // 있는 연락 수단만 헤더에 노출한다.
+  const headerCta = [callButton, kakaoButton].filter(Boolean).join("\n    ");
 
   return `<!DOCTYPE html>
 <html lang="ko">
@@ -253,15 +291,15 @@ ${banners
   <p class="services">${tagline}</p>
   <p class="notice">${notice}</p>
   <div class="header-cta">
-    <a class="btn-call" href="tel:${manifest.phone}">전화상담 ${
-      manifest.phone
-    }</a>${kakaoButton}
+    ${headerCta}
   </div>
 </header>
 ${navHtml}
 ${bannerStrip}${body}
 <footer class="footer">
-  <p>${manifest.brandName} | ${manifest.industry} | 대표전화 ${manifest.phone}</p>
+  <p>${manifest.brandName} | ${manifest.industry}${
+    manifest.phone ? ` | 대표전화 ${manifest.phone}` : ""
+  }</p>
 </footer>
 </body>
 </html>`;
@@ -276,7 +314,8 @@ export function organizationSchema(manifest: SiteManifest) {
       "@type": "LocalBusiness",
       name: manifest.brandName,
       url: manifest.siteUrl,
-      telephone: manifest.phone,
+      // 전화가 없으면 telephone 필드를 넣지 않는다(빈 값이면 잘못된 스키마).
+      ...(manifest.phone ? { telephone: manifest.phone } : {}),
       areaServed: regions,
       knowsAbout: [
         manifest.industry,

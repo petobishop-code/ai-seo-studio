@@ -1,5 +1,5 @@
 import type { SiteManifest, SitePageMeta } from "../../types";
-import { galleryPath, pickGallery } from "../../layout";
+import { ctaButtonsHtml, galleryPath, pickGallery } from "../../layout";
 
 /**
  * 업종(하수구/싱크대/변기)별 원고 소스.
@@ -213,7 +213,7 @@ ${photoSection(manifest, kw)}
     <div class="cta">
       <h2>9. ${kw} 24시간 상담 안내</h2>
       <p>${page.region} 지역 ${kw} 문제, 지금 바로 ${manifest.brandName}에 상담하세요.</p>
-      <a class="btn" href="tel:${manifest.phone}">전화 ${manifest.phone}</a>
+      ${ctaButtonsHtml(manifest)}
     </div>
   </section>
 </article>`;

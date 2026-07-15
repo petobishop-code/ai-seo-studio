@@ -15,7 +15,7 @@ function toManifest(input: WebsiteInput): SiteManifest {
   return {
     brandName: input.brandName || `${keyword} 전문센터`,
     brandSlug: input.brandSlug || "brand",
-    phone: input.phone || "010-7601-1156",
+    phone: input.phone || "",
     kakaoId: input.kakaoId || "",
     industry: input.industry || "하수구/배관",
     siteUrl: (input.siteUrl || "http://localhost:3000").replace(/\/+$/, ""),

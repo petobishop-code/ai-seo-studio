@@ -10,6 +10,9 @@ export async function POST(request: Request) {
     const mainKeyword = String(body.mainKeyword || "").trim();
     const industry = String(body.industry || "하수구/배관");
     const brandSlug = String(body.brandSlug || "").trim();
+    const brandName = String(body.brandName || "").trim();
+    const phone = String(body.phone || "").trim();
+    const kakaoId = String(body.kakaoId || "").trim();
 
     if (!mainKeyword) {
       return NextResponse.json(
@@ -24,6 +27,9 @@ export async function POST(request: Request) {
       mainKeyword,
       industry,
       brandSlug: brandSlug || undefined,
+      brandName: brandName || undefined,
+      phone: phone || undefined,
+      kakaoId: kakaoId || undefined,
       assets,
     });
 
