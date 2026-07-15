@@ -27,6 +27,8 @@ export type SiteAssets = {
   fairImagesSource: string;
   /** 메인 히어로 이미지 원본 경로. 예: "brands/pusanwedding/hero.webp" (없으면 "") */
   heroImageSource: string;
+  /** 헤더 배경 이미지 원본 경로. 예: "brands/pusanwedding/header.webp" (없으면 "") */
+  headerImageSource: string;
 };
 
 export const EMPTY_ASSETS: SiteAssets = {
@@ -39,6 +41,7 @@ export const EMPTY_ASSETS: SiteAssets = {
   fairImages: [],
   fairImagesSource: "",
   heroImageSource: "",
+  headerImageSource: "",
 };
 
 export type WebsiteInput = {

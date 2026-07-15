@@ -56,9 +56,13 @@ export async function POST(request: Request) {
       });
     }
 
-    if (assets.heroImageSource) {
+    for (const [source, name] of [
+      [assets.heroImageSource, "hero.webp"],
+      [assets.headerImageSource, "header.webp"],
+    ] as const) {
+      if (!source) continue;
       await mkdir(path.join(root, "images"), { recursive: true });
-      await cp(siteAssetPath(assets.heroImageSource), path.join(root, "images", "hero.webp"));
+      await cp(siteAssetPath(source), path.join(root, "images", name));
     }
 
     return NextResponse.json({

@@ -286,7 +286,11 @@ ${banners
 <style>${style()}${extraStyles ?? ""}</style>
 </head>
 <body>
-<header class="header">
+<header class="header"${
+    manifest.assets?.headerImageSource
+      ? ` style="background-image:linear-gradient(180deg,rgba(28,18,26,.74),rgba(42,20,32,.86)),url('/images/header.webp');background-size:cover;background-position:center"`
+      : ""
+  }>
   <h1>${heading ?? title}</h1>
   <p class="services">${tagline}</p>
   <p class="notice">${notice}</p>

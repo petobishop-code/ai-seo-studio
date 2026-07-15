@@ -79,12 +79,17 @@ export async function listSiteAssets(
   const heroRel = brand ? `brands/${brand}/hero.webp` : "";
   const heroImageSource = heroRel && (await fileExists(heroRel)) ? heroRel : "";
 
+  const headerRel = brand ? `brands/${brand}/header.webp` : "";
+  const headerImageSource =
+    headerRel && (await fileExists(headerRel)) ? headerRel : "";
+
   const extra = {
     verifyFiles,
     verifySource: verifyFiles.length ? verifySource : "",
     fairImages,
     fairImagesSource: fairImages.length ? fairImagesSource : "",
     heroImageSource,
+    headerImageSource,
   };
 
   const brandGallerySource = brand ? `brands/${brand}/gallery` : "";

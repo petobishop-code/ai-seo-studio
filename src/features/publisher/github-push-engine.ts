@@ -60,10 +60,14 @@ async function copyAssets(assets: SiteAssets, publishDir: string) {
     });
   }
 
-  // 히어로 이미지 단일 파일 → images/hero.webp
-  if (assets.heroImageSource) {
+  // 단일 이미지 파일들 → images/ 루트
+  for (const [source, name] of [
+    [assets.heroImageSource, "hero.webp"],
+    [assets.headerImageSource, "header.webp"],
+  ] as const) {
+    if (!source) continue;
     await mkdir(target, { recursive: true });
-    await cp(siteAssetPath(assets.heroImageSource), path.join(target, "hero.webp"));
+    await cp(siteAssetPath(source), path.join(target, name));
   }
 
   // 소유권 확인 파일은 루트에 있어야 검색엔진이 찾는다(/naverXXXX.html).
