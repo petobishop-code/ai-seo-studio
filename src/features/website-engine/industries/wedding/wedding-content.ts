@@ -65,23 +65,32 @@ const FAQ = [
   },
 ];
 
-/** 박람회 시각 요소: 생성된 사진이 있으면 사진, 없으면 SVG 모티프로 폴백. */
-function fairVisual(manifest: SiteManifest, name: string): string {
-  const img = fairFile(name).replace(/\.html$/, ".webp");
+function fairImageFile(name: string) {
+  return fairFile(name).replace(/\.html$/, ".webp");
+}
 
-  if (manifest.assets?.fairImages?.includes(img)) {
-    return `<img src="/images/fairs/${encodeURI(img)}" alt="${name}" loading="lazy">`;
+function hasFairImage(manifest: SiteManifest, name: string) {
+  return manifest.assets?.fairImages?.includes(fairImageFile(name)) ?? false;
+}
+
+/** 박람회 시각 요소: 링크 미리보기(og) 이미지가 있으면 사진, 없으면 SVG 모티프로 폴백. */
+function fairVisual(manifest: SiteManifest, name: string): string {
+  if (hasFairImage(manifest, name)) {
+    return `<img src="/images/fairs/${encodeURI(fairImageFile(name))}" alt="${name}" loading="lazy">`;
   }
 
   return fairThumb(name);
 }
 
 // 목록 카드는 내부 세부 페이지로 연결한다(그래야 그 페이지가 검색에 노출된다).
+// 미리보기 이미지를 상단에 크게 보여주는 세로형 카드.
 function fairCard(manifest: SiteManifest, event: WeddingEvent) {
   return `      <a class="fair-card" href="${pageHref(fairFile(event.name))}">
         <span class="fair-thumb">${fairVisual(manifest, event.name)}</span>
-        <span class="fair-name">${event.name}</span>
-        <span class="fair-apply">자세히 →</span>
+        <span class="fair-body">
+          <span class="fair-name">${event.name}</span>
+          <span class="fair-apply">자세히 →</span>
+        </span>
       </a>`;
 }
 
@@ -173,16 +182,34 @@ export function renderArticle(
   const fair = page.keyword;
   const link = page.applyLink || MAIN_APPLY_LINK;
 
-  return `
-${renderApplyHero(`${fair} 무료 신청`, link, `${fair} 무료 신청하기 →`)}
-<article class="article section">
-  <section class="block fair-detail-head">
+  // 미리보기 이미지가 있으면 상단에 포스터 배너로, 없으면 SVG 아이콘을 작게.
+  const banner = hasFairImage(manifest, fair)
+    ? `
+<section class="section">
+  <div class="fair-banner"><img src="/images/fairs/${encodeURI(
+    fairImageFile(fair)
+  )}" alt="${fair} 미리보기" width="800" height="450"></div>
+</section>`
+    : "";
+
+  const head = hasFairImage(manifest, fair)
+    ? `  <section class="block">
+    <h2>${fair} 안내</h2>
+    <p>${venueHint(fair)}${fair}의 무료초대권 신청과 참여 혜택을 안내합니다. 사전 신청자에게는 무료초대권과 사은품이 제공되며, 한자리에서 여러 웨딩 업체의 견적과 특전을 비교할 수 있습니다.</p>
+  </section>`
+    : `  <section class="block fair-detail-head">
     <span class="fair-thumb-lg">${fairVisual(manifest, fair)}</span>
     <div>
       <h2>${fair} 안내</h2>
       <p>${venueHint(fair)}${fair}의 무료초대권 신청과 참여 혜택을 안내합니다. 사전 신청자에게는 무료초대권과 사은품이 제공되며, 한자리에서 여러 웨딩 업체의 견적과 특전을 비교할 수 있습니다.</p>
     </div>
-  </section>
+  </section>`;
+
+  return `
+${banner}
+${renderApplyHero(`${fair} 무료 신청`, link, `${fair} 무료 신청하기 →`)}
+<article class="article section">
+${head}
 
   <section class="block">
     <h2>${fair} 참여 혜택</h2>
@@ -271,17 +298,22 @@ body{background:var(--ivory);color:var(--ink);font-family:'Noto Sans KR',sans-se
 /* 박람회 링크 카드 */
 .cat-title{font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:29px;color:var(--wine);margin:0 0 22px;letter-spacing:.01em}
 .cat-title::after{content:"";display:block;width:44px;height:1.5px;background:var(--gold);margin-top:16px}
-.fair-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-.fair-card{display:flex;align-items:center;gap:16px;background:var(--paper);border:1px solid var(--gold-line);border-left:3px solid var(--gold);border-radius:2px;padding:16px 22px 16px 16px;box-shadow:0 12px 30px rgba(60,31,43,.06);transition:transform .15s,box-shadow .15s,border-color .15s}
-.fair-card:hover{transform:translateY(-2px);box-shadow:0 20px 44px rgba(60,31,43,.14);border-left-color:var(--gold-2)}
-.fair-thumb{flex:0 0 auto;width:58px;height:58px}
-.fair-thumb svg,.fair-thumb img{width:58px;height:58px;display:block;border-radius:8px;object-fit:cover}
-.fair-name{flex:1;font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:18px;color:var(--wine)}
+/* 박람회 미리보기 카드 — 상단 포스터 이미지 + 하단 이름 */
+.fair-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.fair-card{display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--gold-line);border-radius:4px;overflow:hidden;box-shadow:0 12px 30px rgba(60,31,43,.06);transition:transform .15s,box-shadow .15s}
+.fair-card:hover{transform:translateY(-3px);box-shadow:0 22px 48px rgba(60,31,43,.16)}
+.fair-thumb{display:block;width:100%;aspect-ratio:16/9;border-bottom:2px solid var(--gold);background:#efe5d3}
+.fair-thumb img{width:100%;height:100%;display:block;object-fit:cover}
+.fair-thumb svg{width:88px;height:88px;display:block;margin:auto}
+.fair-body{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px}
+.fair-name{font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:17px;line-height:1.35;color:var(--wine)}
 .fair-apply{flex:0 0 auto;font-size:13px;font-weight:500;letter-spacing:.04em;color:var(--gold);white-space:nowrap}
 .fair-card:hover .fair-apply{color:var(--wine)}
 .fair-note{color:var(--muted);font-weight:300;font-size:14px;margin-top:14px}
 
-/* 세부 페이지 헤드 */
+/* 세부 페이지: 포스터 배너 */
+.fair-banner{border:1px solid var(--gold-line);border-radius:3px;overflow:hidden;box-shadow:0 16px 40px rgba(60,31,43,.10)}
+.fair-banner img{width:100%;height:auto;display:block}
 .fair-detail-head{display:flex;align-items:center;gap:22px}
 .fair-thumb-lg{flex:0 0 auto;width:96px;height:96px}
 .fair-thumb-lg svg,.fair-thumb-lg img{width:96px;height:96px;display:block;border-radius:12px;object-fit:cover}
@@ -324,5 +356,7 @@ body{background:var(--ivory);color:var(--ink);font-family:'Noto Sans KR',sans-se
 /* FOOTER */
 .footer{background:var(--wine-deep);color:#C9B79E;border-top:1px solid rgba(198,168,103,.4);font-weight:300;letter-spacing:.02em}
 
-@media(max-width:800px){.fair-grid,.checklist{grid-template-columns:1fr}.header h1{font-size:34px}}
+@media(max-width:950px){.fair-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:800px){.checklist{grid-template-columns:1fr}.header h1{font-size:34px}}
+@media(max-width:600px){.fair-grid{grid-template-columns:1fr}}
 `;
