@@ -61,6 +61,11 @@ export type SitePageMeta = {
   service: string;
   title: string;
   description: string;
+  /**
+   * 외부 신청/예약 링크 (예: reply-alba). 있으면 이 페이지는 세부 랜딩 페이지로,
+   * CTA가 이 링크로 연결된다. 없으면 일반 콘텐츠 페이지.
+   */
+  applyLink?: string;
 };
 
 /**

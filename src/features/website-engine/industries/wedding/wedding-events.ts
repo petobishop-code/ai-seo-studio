@@ -21,6 +21,18 @@ export type WeddingRegionGroup = {
 /** 메인 상단에 바로 연결할 대표 신청 링크 (부산 웨딩박람회) */
 export const MAIN_APPLY_LINK = "https://replyalba.com/pt/LOQI92OJxc";
 
+/** 박람회명 → 세부 페이지 파일명. 공백을 제거해 한글 파일명으로 쓴다. */
+export function fairFile(name: string) {
+  return `${name.replace(/\s+/g, "")}.html`;
+}
+
+/** 박람회명에서 지역(도시)을 추정한다. areaServed·그룹핑에 쓴다. */
+export function fairCity(name: string) {
+  if (name.includes("울산")) return "울산";
+  if (name.includes("창원")) return "창원";
+  return "부산";
+}
+
 export const WEDDING_CATALOG: WeddingRegionGroup[] = [
   {
     region: "부산 웨딩박람회",

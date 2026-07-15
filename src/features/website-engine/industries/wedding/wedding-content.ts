@@ -1,8 +1,11 @@
 import {
   MAIN_APPLY_LINK,
   WEDDING_CATALOG,
+  fairFile,
   type WeddingEvent,
 } from "./wedding-events";
+import { fairThumb } from "./wedding-graphics";
+import { pageHref } from "../../layout";
 import type { SiteManifest, SitePageMeta } from "../../types";
 
 /** 방문 전 체크리스트 (weddingbusan 구조 참고) */
@@ -62,10 +65,12 @@ const FAQ = [
   },
 ];
 
+// 목록 카드는 내부 세부 페이지로 연결한다(그래야 그 페이지가 검색에 노출된다).
 function fairCard(event: WeddingEvent) {
-  return `      <a class="fair-card" href="${event.link}" target="_blank" rel="noopener noreferrer">
+  return `      <a class="fair-card" href="${pageHref(fairFile(event.name))}">
+        <span class="fair-thumb">${fairThumb(event.name)}</span>
         <span class="fair-name">${event.name}</span>
-        <span class="fair-apply">무료신청 →</span>
+        <span class="fair-apply">자세히 →</span>
       </a>`;
 }
 
@@ -82,17 +87,32 @@ ${group.events.map(fairCard).join("\n")}
   ).join("\n");
 }
 
-/** 메인 상단의 대표 신청 배너. 대표 링크로 바로 연결한다. */
-export function renderApplyHero(heading: string): string {
+/** 대표/세부 신청 배너. link를 주면 해당 박람회 신청 링크로 연결한다. */
+export function renderApplyHero(
+  heading: string,
+  link: string = MAIN_APPLY_LINK,
+  buttonLabel = "웨딩박람회 무료 신청하기 →"
+): string {
   return `
 <section class="section">
   <div class="cta apply-hero">
     <p class="cta-eyebrow">FREE APPLICATION</p>
     <h2>${heading}</h2>
     <p>버튼을 누르면 바로 무료 신청 페이지로 연결됩니다.</p>
-    <a class="btn btn-apply" href="${MAIN_APPLY_LINK}" target="_blank" rel="noopener noreferrer">웨딩박람회 무료 신청하기 →</a>
+    <a class="btn btn-apply" href="${link}" target="_blank" rel="noopener noreferrer">${buttonLabel}</a>
   </div>
 </section>`;
+}
+
+/** 박람회명에서 장소 성격을 짚어 문장에 변화를 준다(얇은 중복 콘텐츠 완화). */
+function venueHint(name: string) {
+  if (name.includes("백화점")) return "백화점에서 열리는 ";
+  if (name.includes("호텔")) return "호텔에서 진행되는 ";
+  if (name.includes("벡스코")) return "벡스코에서 열리는 ";
+  if (name.includes("센텀")) return "신세계 센텀시티에서 열리는 ";
+  if (name.includes("방송국") || name.includes("KNN")) return "방송사가 주최하는 ";
+  if (name.includes("허니문")) return "허니문 준비를 위한 ";
+  return "";
 }
 
 function checklistSection(kw: string) {
@@ -130,28 +150,52 @@ ${items}
   </section>`;
 }
 
-/** 웨딩박람회 키워드 페이지 본문. 대표 신청 → 지역별 목록 → 체크리스트 → FAQ. */
+/**
+ * 박람회 세부 랜딩 페이지.
+ * 박람회명을 제목/본문에 담아 그 키워드로 검색 노출을 노리고, CTA는 이 박람회의
+ * reply-alba 신청 링크로 연결한다.
+ */
 export function renderArticle(
   _manifest: SiteManifest,
   page: SitePageMeta
 ): string {
-  const kw = page.keyword;
+  const fair = page.keyword;
+  const link = page.applyLink || MAIN_APPLY_LINK;
 
   return `
-${renderApplyHero(`${page.region} 웨딩박람회 무료 신청`)}
+${renderApplyHero(`${fair} 무료 신청`, link, `${fair} 무료 신청하기 →`)}
 <article class="article section">
-  <section class="block">
-    <h2>${kw} 안내</h2>
-    <p>${page.region}·경남 지역에서 열리는 웨딩박람회를 한곳에 모았습니다. 원하는 박람회의 무료신청 버튼을 누르면 바로 신청 페이지로 연결됩니다. 사전 신청 시 무료초대권과 사은품을 함께 받을 수 있습니다.</p>
+  <section class="block fair-detail-head">
+    <span class="fair-thumb-lg">${fairThumb(fair)}</span>
+    <div>
+      <h2>${fair} 안내</h2>
+      <p>${venueHint(fair)}${fair}의 무료초대권 신청과 참여 혜택을 안내합니다. 사전 신청자에게는 무료초대권과 사은품이 제공되며, 한자리에서 여러 웨딩 업체의 견적과 특전을 비교할 수 있습니다.</p>
+    </div>
   </section>
-</article>
-${renderCatalog()}
-<article class="article section">
+
   <section class="block">
-    <p class="fair-note">※ 박람회 일정과 특전은 주최사 사정에 따라 변경될 수 있습니다. 신청 페이지에서 최신 정보를 확인해주세요.</p>
+    <h2>${fair} 참여 혜택</h2>
+    <ul class="benefit-list">
+      <li>사전 신청 시 무료초대권 및 사은품 증정</li>
+      <li>스드메(스튜디오·드레스·메이크업) 패키지 특가 비교</li>
+      <li>예식홀·혼수·가전 프로모션 특전 안내</li>
+      <li>당일 계약 시 추가 혜택 (환불 조건 확인 후 결정)</li>
+    </ul>
   </section>
-${checklistSection(kw)}
-${faqSection(kw)}
+
+  <section class="block">
+    <h2>${fair} 신청 방법</h2>
+    <p>아래 버튼을 누르면 ${fair} 무료 신청 페이지로 연결됩니다. 이름과 연락처만 입력하면 신청이 완료됩니다.</p>
+    <a class="btn btn-apply" href="${link}" target="_blank" rel="noopener noreferrer">${fair} 무료 신청하기 →</a>
+    <p class="fair-note">※ 일정과 특전은 주최사 사정에 따라 변경될 수 있습니다. 신청 페이지에서 최신 정보를 확인해주세요.</p>
+  </section>
+
+${checklistSection(fair)}
+${faqSection(fair)}
+
+  <section class="block">
+    <a class="back-link" href="/">← 부산·경남 웨딩박람회 전체 목록 보기</a>
+  </section>
 </article>`;
 }
 
@@ -209,16 +253,34 @@ body{background:var(--ivory);color:var(--ink);font-family:'Noto Sans KR',sans-se
 .article h3{font-family:'Nanum Myeongjo',serif;color:var(--gold);font-weight:700}
 .article p{color:var(--ink);font-weight:300;line-height:1.9}
 
+/* 메인 히어로 이미지 */
+.hero-visual{border:1px solid var(--gold-line);border-radius:2px;overflow:hidden;box-shadow:0 18px 44px rgba(60,31,43,.08)}
+.hero-visual svg{width:100%;height:auto;display:block}
+
 /* 박람회 링크 카드 */
 .cat-title{font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:29px;color:var(--wine);margin:0 0 22px;letter-spacing:.01em}
 .cat-title::after{content:"";display:block;width:44px;height:1.5px;background:var(--gold);margin-top:16px}
 .fair-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-.fair-card{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--paper);border:1px solid var(--gold-line);border-left:3px solid var(--gold);border-radius:2px;padding:22px 24px;box-shadow:0 12px 30px rgba(60,31,43,.06);transition:transform .15s,box-shadow .15s,border-color .15s}
+.fair-card{display:flex;align-items:center;gap:16px;background:var(--paper);border:1px solid var(--gold-line);border-left:3px solid var(--gold);border-radius:2px;padding:16px 22px 16px 16px;box-shadow:0 12px 30px rgba(60,31,43,.06);transition:transform .15s,box-shadow .15s,border-color .15s}
 .fair-card:hover{transform:translateY(-2px);box-shadow:0 20px 44px rgba(60,31,43,.14);border-left-color:var(--gold-2)}
-.fair-name{font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:18px;color:var(--wine)}
+.fair-thumb{flex:0 0 auto;width:58px;height:58px}
+.fair-thumb svg{width:58px;height:58px;display:block}
+.fair-name{flex:1;font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:18px;color:var(--wine)}
 .fair-apply{flex:0 0 auto;font-size:13px;font-weight:500;letter-spacing:.04em;color:var(--gold);white-space:nowrap}
 .fair-card:hover .fair-apply{color:var(--wine)}
-.fair-note{color:var(--muted);font-weight:300;font-size:14px}
+.fair-note{color:var(--muted);font-weight:300;font-size:14px;margin-top:14px}
+
+/* 세부 페이지 헤드 */
+.fair-detail-head{display:flex;align-items:center;gap:22px}
+.fair-thumb-lg{flex:0 0 auto;width:82px;height:82px}
+.fair-thumb-lg svg{width:82px;height:82px;display:block}
+.fair-detail-head h2{margin-top:0}
+.benefit-list{list-style:none;margin:0;padding:0}
+.benefit-list li{padding:11px 0 11px 24px;position:relative;color:var(--ink);font-weight:300;border-bottom:1px solid var(--gold-line)}
+.benefit-list li:last-child{border-bottom:0}
+.benefit-list li::before{content:"\\25C6";position:absolute;left:0;top:13px;color:var(--gold);font-size:9px}
+.back-link{display:inline-block;color:var(--gold);font-weight:500;letter-spacing:.02em}
+.back-link:hover{color:var(--wine)}
 
 /* 체크리스트 */
 .checklist{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
