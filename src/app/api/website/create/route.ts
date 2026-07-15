@@ -45,6 +45,7 @@ export async function POST(request: Request) {
     const imageJobs: Array<[string, string]> = [
       [assets.bannerSource, "banner"],
       [assets.gallerySource, "gallery"],
+      [assets.fairImagesSource, "fairs"],
     ];
 
     for (const [source, kind] of imageJobs) {
@@ -53,6 +54,11 @@ export async function POST(request: Request) {
       await cp(siteAssetPath(source), path.join(root, "images", kind), {
         recursive: true,
       });
+    }
+
+    if (assets.heroImageSource) {
+      await mkdir(path.join(root, "images"), { recursive: true });
+      await cp(siteAssetPath(assets.heroImageSource), path.join(root, "images", "hero.webp"));
     }
 
     return NextResponse.json({

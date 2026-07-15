@@ -21,9 +21,13 @@ function parseRegion(keyword: string) {
 }
 
 function homeBody(manifest: SiteManifest) {
+  const hero = manifest.assets?.heroImageSource
+    ? `<img src="/images/hero.webp" alt="${manifest.brandName} 대표 이미지" width="1600" height="520">`
+    : heroSvg();
+
   return `
 <section class="section">
-  <div class="hero-visual">${heroSvg()}</div>
+  <div class="hero-visual">${hero}</div>
 </section>
 ${renderApplyHero(`${manifest.brandName} 무료 신청`)}
 <section class="section">
@@ -33,7 +37,7 @@ ${renderApplyHero(`${manifest.brandName} 무료 신청`)}
     <div class="card"><h3>사은품·특전</h3><p>사전 신청자에게 무료초대권과 사은품이 제공됩니다.</p></div>
   </div>
 </section>
-${renderCatalog()}`;
+${renderCatalog(manifest)}`;
 }
 
 export const weddingIndustry: IndustryModule = {

@@ -21,6 +21,12 @@ export type SiteAssets = {
   verifyFiles: string[];
   /** site-assets 기준 확인파일 경로. 예: "brands/surinam/verify" */
   verifySource: string;
+  /** 박람회 등 항목별 이미지 파일명 목록 (images/fairs/ 로 배포) */
+  fairImages: string[];
+  /** site-assets 기준 항목 이미지 경로. 예: "brands/pusanwedding/fairs" */
+  fairImagesSource: string;
+  /** 메인 히어로 이미지 원본 경로. 예: "brands/pusanwedding/hero.webp" (없으면 "") */
+  heroImageSource: string;
 };
 
 export const EMPTY_ASSETS: SiteAssets = {
@@ -30,6 +36,9 @@ export const EMPTY_ASSETS: SiteAssets = {
   gallerySource: "",
   verifyFiles: [],
   verifySource: "",
+  fairImages: [],
+  fairImagesSource: "",
+  heroImageSource: "",
 };
 
 export type WebsiteInput = {

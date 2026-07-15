@@ -49,6 +49,7 @@ async function copyAssets(assets: SiteAssets, publishDir: string) {
   const jobs: Array<[string, string]> = [
     [assets.bannerSource, "banner"],
     [assets.gallerySource, "gallery"],
+    [assets.fairImagesSource, "fairs"],
   ];
 
   for (const [source, kind] of jobs) {
@@ -57,6 +58,12 @@ async function copyAssets(assets: SiteAssets, publishDir: string) {
     await cp(siteAssetPath(source), path.join(target, kind), {
       recursive: true,
     });
+  }
+
+  // 히어로 이미지 단일 파일 → images/hero.webp
+  if (assets.heroImageSource) {
+    await mkdir(target, { recursive: true });
+    await cp(siteAssetPath(assets.heroImageSource), path.join(target, "hero.webp"));
   }
 
   // 소유권 확인 파일은 루트에 있어야 검색엔진이 찾는다(/naverXXXX.html).

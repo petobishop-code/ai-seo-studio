@@ -65,23 +65,34 @@ const FAQ = [
   },
 ];
 
+/** 박람회 시각 요소: 생성된 사진이 있으면 사진, 없으면 SVG 모티프로 폴백. */
+function fairVisual(manifest: SiteManifest, name: string): string {
+  const img = fairFile(name).replace(/\.html$/, ".webp");
+
+  if (manifest.assets?.fairImages?.includes(img)) {
+    return `<img src="/images/fairs/${encodeURI(img)}" alt="${name}" loading="lazy">`;
+  }
+
+  return fairThumb(name);
+}
+
 // 목록 카드는 내부 세부 페이지로 연결한다(그래야 그 페이지가 검색에 노출된다).
-function fairCard(event: WeddingEvent) {
+function fairCard(manifest: SiteManifest, event: WeddingEvent) {
   return `      <a class="fair-card" href="${pageHref(fairFile(event.name))}">
-        <span class="fair-thumb">${fairThumb(event.name)}</span>
+        <span class="fair-thumb">${fairVisual(manifest, event.name)}</span>
         <span class="fair-name">${event.name}</span>
         <span class="fair-apply">자세히 →</span>
       </a>`;
 }
 
 /** 지역별 박람회 링크 목록. 홈과 키워드 페이지가 공유한다(.section 으로 폭·여백 통일). */
-export function renderCatalog(): string {
+export function renderCatalog(manifest: SiteManifest): string {
   return WEDDING_CATALOG.map(
     (group) => `
 <section class="section">
   <h2 class="cat-title">${group.region}</h2>
   <div class="fair-grid">
-${group.events.map(fairCard).join("\n")}
+${group.events.map((event) => fairCard(manifest, event)).join("\n")}
   </div>
 </section>`
   ).join("\n");
@@ -156,7 +167,7 @@ ${items}
  * reply-alba 신청 링크로 연결한다.
  */
 export function renderArticle(
-  _manifest: SiteManifest,
+  manifest: SiteManifest,
   page: SitePageMeta
 ): string {
   const fair = page.keyword;
@@ -166,7 +177,7 @@ export function renderArticle(
 ${renderApplyHero(`${fair} 무료 신청`, link, `${fair} 무료 신청하기 →`)}
 <article class="article section">
   <section class="block fair-detail-head">
-    <span class="fair-thumb-lg">${fairThumb(fair)}</span>
+    <span class="fair-thumb-lg">${fairVisual(manifest, fair)}</span>
     <div>
       <h2>${fair} 안내</h2>
       <p>${venueHint(fair)}${fair}의 무료초대권 신청과 참여 혜택을 안내합니다. 사전 신청자에게는 무료초대권과 사은품이 제공되며, 한자리에서 여러 웨딩 업체의 견적과 특전을 비교할 수 있습니다.</p>
@@ -255,7 +266,7 @@ body{background:var(--ivory);color:var(--ink);font-family:'Noto Sans KR',sans-se
 
 /* 메인 히어로 이미지 */
 .hero-visual{border:1px solid var(--gold-line);border-radius:2px;overflow:hidden;box-shadow:0 18px 44px rgba(60,31,43,.08)}
-.hero-visual svg{width:100%;height:auto;display:block}
+.hero-visual svg,.hero-visual img{width:100%;height:auto;display:block}
 
 /* 박람회 링크 카드 */
 .cat-title{font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:29px;color:var(--wine);margin:0 0 22px;letter-spacing:.01em}
@@ -264,7 +275,7 @@ body{background:var(--ivory);color:var(--ink);font-family:'Noto Sans KR',sans-se
 .fair-card{display:flex;align-items:center;gap:16px;background:var(--paper);border:1px solid var(--gold-line);border-left:3px solid var(--gold);border-radius:2px;padding:16px 22px 16px 16px;box-shadow:0 12px 30px rgba(60,31,43,.06);transition:transform .15s,box-shadow .15s,border-color .15s}
 .fair-card:hover{transform:translateY(-2px);box-shadow:0 20px 44px rgba(60,31,43,.14);border-left-color:var(--gold-2)}
 .fair-thumb{flex:0 0 auto;width:58px;height:58px}
-.fair-thumb svg{width:58px;height:58px;display:block}
+.fair-thumb svg,.fair-thumb img{width:58px;height:58px;display:block;border-radius:8px;object-fit:cover}
 .fair-name{flex:1;font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:18px;color:var(--wine)}
 .fair-apply{flex:0 0 auto;font-size:13px;font-weight:500;letter-spacing:.04em;color:var(--gold);white-space:nowrap}
 .fair-card:hover .fair-apply{color:var(--wine)}
@@ -272,8 +283,8 @@ body{background:var(--ivory);color:var(--ink);font-family:'Noto Sans KR',sans-se
 
 /* 세부 페이지 헤드 */
 .fair-detail-head{display:flex;align-items:center;gap:22px}
-.fair-thumb-lg{flex:0 0 auto;width:82px;height:82px}
-.fair-thumb-lg svg{width:82px;height:82px;display:block}
+.fair-thumb-lg{flex:0 0 auto;width:96px;height:96px}
+.fair-thumb-lg svg,.fair-thumb-lg img{width:96px;height:96px;display:block;border-radius:12px;object-fit:cover}
 .fair-detail-head h2{margin-top:0}
 .benefit-list{list-style:none;margin:0;padding:0}
 .benefit-list li{padding:11px 0 11px 24px;position:relative;color:var(--ink);font-weight:300;border-bottom:1px solid var(--gold-line)}

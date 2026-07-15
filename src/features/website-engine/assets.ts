@@ -1,4 +1,4 @@
-import { readdir } from "fs/promises";
+import { readdir, stat } from "fs/promises";
 import path from "path";
 import { EMPTY_ASSETS, type SiteAssets } from "./types";
 
@@ -36,6 +36,14 @@ async function listFiles(relative: string, pattern: RegExp) {
 const listImages = (relative: string) =>
   listFiles(relative, /\.(webp|png|jpe?g)$/i);
 
+async function fileExists(relative: string) {
+  try {
+    return (await stat(siteAssetPath(relative))).isFile();
+  } catch {
+    return false;
+  }
+}
+
 /**
  * 이 사이트에 쓸 이미지를 찾는다.
  *
@@ -62,9 +70,21 @@ export async function listSiteAssets(
     ? await listFiles(verifySource, /\.(html?|txt|xml)$/i)
     : [];
 
-  const verify = {
+  // 항목별 이미지(박람회 등)와 히어로 이미지 — 브랜드 전용.
+  const fairImagesSource = brand ? `brands/${brand}/fairs` : "";
+  const fairImages = fairImagesSource
+    ? await listImages(fairImagesSource)
+    : [];
+
+  const heroRel = brand ? `brands/${brand}/hero.webp` : "";
+  const heroImageSource = heroRel && (await fileExists(heroRel)) ? heroRel : "";
+
+  const extra = {
     verifyFiles,
     verifySource: verifyFiles.length ? verifySource : "",
+    fairImages,
+    fairImagesSource: fairImages.length ? fairImagesSource : "",
+    heroImageSource,
   };
 
   const brandGallerySource = brand ? `brands/${brand}/gallery` : "";
@@ -78,7 +98,7 @@ export async function listSiteAssets(
       bannerSource: banners.length ? bannerSource : "",
       gallery: brandGallery,
       gallerySource: brandGallerySource,
-      ...verify,
+      ...extra,
     };
   }
 
@@ -94,6 +114,6 @@ export async function listSiteAssets(
     bannerSource: banners.length ? bannerSource : "",
     gallery: industryGallery,
     gallerySource: industryGallery.length ? industryGallerySource : "",
-    ...verify,
+    ...extra,
   };
 }
