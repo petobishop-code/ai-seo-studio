@@ -1,8 +1,13 @@
 import { drainIndustry } from "./drain";
 import { weddingIndustry } from "./wedding";
+import { loanIndustry } from "./loan";
 import type { IndustryModule } from "./types";
 
-const MODULES: IndustryModule[] = [drainIndustry, weddingIndustry];
+const MODULES: IndustryModule[] = [
+  drainIndustry,
+  weddingIndustry,
+  loanIndustry,
+];
 
 const BY_LABEL = new Map(MODULES.map((module) => [module.label, module]));
 
