@@ -29,6 +29,10 @@ export type SiteAssets = {
   heroImageSource: string;
   /** 헤더 배경 이미지 원본 경로. 예: "brands/pusanwedding/header.webp" (없으면 "") */
   headerImageSource: string;
+  /** 본문 삽입용 사진 파일명 목록 (images/photos/ 로 배포). 업종 공용 또는 브랜드 전용. */
+  photos: string[];
+  /** site-assets 기준 사진 경로. 예: "industries/loan/photos" */
+  photosSource: string;
 };
 
 export const EMPTY_ASSETS: SiteAssets = {
@@ -42,6 +46,8 @@ export const EMPTY_ASSETS: SiteAssets = {
   fairImagesSource: "",
   heroImageSource: "",
   headerImageSource: "",
+  photos: [],
+  photosSource: "",
 };
 
 export type WebsiteInput = {

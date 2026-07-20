@@ -131,6 +131,49 @@ export const LOAN_CATALOG: LoanProduct[] = [
   },
 ];
 
+/**
+ * 추가 대출 키워드 페이지.
+ * 상위노출용 랜딩 페이지로, 5개 소제목 + 약 2000자 정보성 원고 + 사진 3~5장을 넣는다.
+ * ⚠️ 무직자·연체자·무서류 등 고위험 키워드가 포함되므로, 원고는 승인/금리를 단정하지 않고
+ * 제도권 금융·정책서민금융 우선, 불법 사금융 주의의 소비자보호 톤으로 통일한다.
+ */
+export const LOAN_KEYWORDS: string[] = [
+  "연체자대출",
+  "기대출과다자대출",
+  "무직자대출",
+  "비상금대출",
+  "생활비대출",
+  "생계자금대출",
+  "100만원소액대출",
+  "비대면대출",
+  "개인신용대출",
+  "직장인신용대출",
+  "신용회복중대출",
+  "영세사업자대출",
+  "신규사업자대출",
+  "여성직장인대출",
+  "여성전문대출",
+  "예비창업자대출",
+  "아파트청약대출",
+  "신혼부부대출",
+  "월세보증금대출",
+  "대학생대출",
+  "청년대출",
+  "간편비대면대출",
+  "무서류대출",
+  "본인인증대출",
+  "무방문대출",
+  "소액대출추천",
+  "무직자비상금대출",
+  "청년생활비대출",
+];
+
+const KEYWORD_SET = new Set(LOAN_KEYWORDS);
+
+export function isKeywordPage(keyword: string) {
+  return KEYWORD_SET.has(keyword);
+}
+
 const STEPS = ["정보 확인", "상품 비교", "상담 신청", "조건 안내", "진행 여부 결정"];
 
 const DISCLAIMER =
@@ -190,8 +233,92 @@ ${steps}
 </section>
 
 <section class="section">
+  <h2 class="title">이런 대출도 함께 확인하세요</h2>
+  <div class="keyword-list">
+${LOAN_KEYWORDS.map(
+  (kw) =>
+    `    <a href="/${encodeURI(loanFile(kw))}">${kw}</a>`
+).join("\n")}
+  </div>
+</section>
+
+<section class="section">
   <div class="notice">${DISCLAIMER}</div>
 </section>`;
+}
+
+function hash(value: string) {
+  let h = 0;
+  for (const ch of value) h = (h * 31 + ch.charCodeAt(0)) | 0;
+  return Math.abs(h);
+}
+
+/** 키워드마다 다른 사진 3~5장을 고른다(같은 키워드는 항상 같은 사진). */
+function pickPhotos(manifest: SiteManifest, kw: string): string[] {
+  const photos = manifest.assets?.photos ?? [];
+  if (!photos.length) return [];
+
+  const count = Math.min(3 + (hash(kw) % 3), photos.length); // 3~5장
+  const start = hash(kw) % photos.length;
+
+  return Array.from(
+    { length: count },
+    (_, i) => photos[(start + i) % photos.length]
+  );
+}
+
+function photoImg(file: string, alt: string) {
+  return `  <figure class="loan-photo"><img src="/images/photos/${encodeURI(
+    file
+  )}" alt="${alt}" loading="lazy" width="880" height="550"></figure>`;
+}
+
+/**
+ * 대출 키워드 랜딩 페이지 — 소제목 5개 + 약 2000자 정보성 원고 + 사진 3~5장.
+ * 승인/금리를 단정하지 않고 제도권 금융·불법 사금융 주의 톤으로 통일.
+ */
+export function renderKeywordArticle(
+  manifest: SiteManifest,
+  kw: string
+): string {
+  const photos = pickPhotos(manifest, kw);
+  const photo = (i: number, alt: string) =>
+    photos[i] ? photoImg(photos[i], alt) : "";
+
+  return `
+<article class="article section">
+  <div class="notice">본 페이지는 ${kw} 관련 일반 정보를 제공하며, 금리·한도·승인 여부는 금융회사와 개인의 신용·소득·상환능력 등에 따라 달라집니다.</div>
+
+  <p>${kw}은(는) 자금이 급하게 필요할 때 많은 분들이 찾는 정보입니다. 다만 조건과 절차를 정확히 이해하지 못하면 불필요한 비용을 부담하거나 불법 금융 피해를 볼 수 있습니다. 아래에서 ${kw}의 기본 개념부터 신청 전 확인사항, 신청 절차, 주의사항, 상담 방법까지 단계별로 정리했으니 천천히 읽어보고 본인 상황에 맞게 판단하시기 바랍니다.</p>
+
+  <h2>1. ${kw} 기본 개념</h2>
+  <p>${kw}은(는) 개인의 신용도와 소득, 상환 능력 등을 종합적으로 검토해 이용 여부와 조건이 결정되는 금융 상품입니다. 같은 이름의 상품이라도 금융회사에 따라 금리와 한도, 상환 방식, 중도상환수수료가 크게 다를 수 있습니다. 특히 신용점수는 연체 이력, 기존 대출 건수와 금액, 카드 이용 형태 등 여러 요소로 산정되기 때문에, 같은 상품이라도 사람마다 적용되는 조건이 달라집니다. 따라서 광고에 표시된 최저 금리나 최대 한도만 보고 판단하기보다, 본인의 조건에서 실제로 적용되는 금리와 총 상환비용을 기준으로 비교하는 것이 무엇보다 중요합니다.</p>
+${photo(0, `${kw} 상담 안내`)}
+
+  <h2>2. ${kw} 신청 전 확인사항</h2>
+  <p>${kw}을(를) 신청하기 전에는 먼저 본인의 소득과 기존 부채 현황을 정확히 파악해야 합니다. 매달 갚아야 하는 원리금이 소득에서 차지하는 비중, 즉 총부채원리금상환비율(DSR)이 지나치게 높으면 승인이 어렵거나 이용하더라도 상환에 큰 부담이 됩니다. 금리 유형(고정·변동)과 상환 기간, 중도상환 시 수수료 여부를 함께 확인하고, 필요 이상으로 큰 금액을 무리하게 신청하지 않는 것이 좋습니다. 여러 금융회사의 조건을 한 번에 비교해 본인에게 가장 유리한 상품을 고르는 것이 합리적입니다.</p>
+${photo(1, `${kw} 신청 전 확인사항`)}
+
+  <h2>3. ${kw} 신청 절차와 필요 서류</h2>
+  <p>${kw}의 일반적인 진행 절차는 ①정보 확인 ②상품 비교 ③상담 신청 ④조건 안내 ⑤진행 여부 결정 순으로 이루어집니다. 신청 시에는 신분증과 함께 소득·재직을 증빙할 수 있는 서류(재직증명서, 소득금액증명원, 급여명세서 등)가 필요한 경우가 많습니다. 최근에는 비대면으로 서류 제출과 본인 인증을 처리할 수 있는 곳도 늘어, 방문 없이 상담과 신청이 가능한 경우도 있습니다. 다만 절차가 간편하다는 점만 앞세우면서 정작 금리와 수수료 정보를 명확히 안내하지 않는 곳은 실제 조건을 더 꼼꼼히 확인해야 합니다.</p>
+${photo(2, `${kw} 신청 절차`)}
+
+  <h2>4. ${kw} 주의사항</h2>
+  <p>${kw}을(를) 알아볼 때는 반드시 제도권 금융회사(은행·저축은행·카드·캐피탈 등)인지 먼저 확인해야 합니다. ‘무조건 승인’, ‘무서류·무방문 즉시 대출’, ‘신용 조회 없이 당일 입금’ 등을 내세우거나 대출 실행 전에 수수료·보증금·선이자를 먼저 요구하는 곳은 불법 사금융일 가능성이 매우 높으므로 절대 이용하지 마세요. 소득 증빙이 어렵거나 신용점수가 낮은 경우에는 서민금융진흥원 등에서 안내하는 정책서민금융 상품과 채무조정·신용회복 제도를 먼저 확인하는 것이 안전하며, 불법 사금융 피해가 우려될 때는 금융감독원(1332)에 상담할 수 있습니다.</p>
+${photo(3, `${kw} 주의사항`)}
+
+  <h2>5. ${kw} 상담 및 이용 안내</h2>
+  <p>본 페이지의 내용은 ${kw} 관련 일반 정보이며, 실제 이용 가능한 상품과 조건은 개인의 신용·소득 상황에 따라 달라집니다. 정확한 금리와 한도, 상환 조건은 해당 금융회사 또는 정식 상담 절차를 통해 반드시 직접 확인하시기 바랍니다. 아래 상담 신청을 통해 기본 정보를 남기시면 조건에 맞는 상품을 탐색하는 데 도움을 드리며, 상담 과정에서 안내받은 내용도 최종 결정 전에 스스로 다시 한번 점검하시길 권합니다.</p>
+${photo(4, `${kw} 상담 안내`)}
+
+  <div class="cta">
+    <h2>${kw} 상담 신청</h2>
+    <p>기본 정보를 남기면 상담을 통해 적합한 상품 탐색을 도와드립니다.</p>
+    ${consultCta(manifest)}
+  </div>
+
+  <div class="notice" style="margin-top:28px">${DISCLAIMER}</div>
+</article>`;
 }
 
 /** 상세: 상품별 안내(1.~란? / 2.신청 전 확인 / 3.상담) */
@@ -199,6 +326,10 @@ export function renderArticle(
   manifest: SiteManifest,
   page: SitePageMeta
 ): string {
+  if (isKeywordPage(page.keyword)) {
+    return renderKeywordArticle(manifest, page.keyword);
+  }
+
   const product =
     LOAN_CATALOG.find((p) => p.name === page.keyword) ?? LOAN_CATALOG[0];
 
@@ -274,11 +405,17 @@ body{background:#fff;color:#14213d;font-family:Arial,'Noto Sans KR',sans-serif}
 .step .num{width:46px;height:46px;border-radius:50%;background:#edf5ff;color:#1264f5;display:grid;place-items:center;margin:0 auto 12px;font-weight:900;font-size:18px}
 .step h3{font-family:inherit;font-weight:700;font-size:16px;color:#14213d;margin:0}
 
-.article h2{font-family:inherit;font-weight:800;color:#071d46;font-size:24px;border-bottom:0;padding-bottom:0}
+.article h2{font-family:inherit;font-weight:800;color:#071d46;font-size:24px;border-bottom:0;padding-bottom:0;margin-top:36px}
 .article h2::after{display:none}
 .article p,.article li{line-height:1.9;color:#4b5565;font-weight:400}
 .article ul{padding-left:20px}
 .article ul li{margin-bottom:8px}
+.loan-photo{margin:22px 0;border-radius:16px;overflow:hidden;border:1px solid #e7ecf4;box-shadow:0 10px 30px rgba(20,40,80,.08)}
+.loan-photo img{width:100%;height:auto;display:block}
+
+.keyword-list{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.keyword-list a{display:inline-block;padding:10px 16px;border:1px solid #e7ecf4;border-radius:999px;background:#fff;color:#14213d;font-weight:700;font-size:14px;transition:all .15s}
+.keyword-list a:hover{border-color:#1264f5;color:#1264f5;background:#f5f9ff}
 
 .notice{background:#fff8e8;border:1px solid #ffe0a1;padding:18px;border-radius:12px;color:#6d5315;font-size:14px;line-height:1.7}
 

@@ -83,6 +83,25 @@ export async function listSiteAssets(
   const headerImageSource =
     headerRel && (await fileExists(headerRel)) ? headerRel : "";
 
+  // 본문 사진: 브랜드 전용 → 없으면 업종 공용.
+  const brandPhotosSource = brand ? `brands/${brand}/photos` : "";
+  const brandPhotos = brandPhotosSource
+    ? await listImages(brandPhotosSource)
+    : [];
+  const industryPhotosSource = industryDir
+    ? `industries/${industryDir}/photos`
+    : "";
+  const industryPhotos = industryPhotosSource
+    ? await listImages(industryPhotosSource)
+    : [];
+  const useBrandPhotos = brandPhotos.length > 0;
+  const photos = useBrandPhotos ? brandPhotos : industryPhotos;
+  const photosSource = useBrandPhotos
+    ? brandPhotosSource
+    : industryPhotos.length
+      ? industryPhotosSource
+      : "";
+
   const extra = {
     verifyFiles,
     verifySource: verifyFiles.length ? verifySource : "",
@@ -90,6 +109,8 @@ export async function listSiteAssets(
     fairImagesSource: fairImages.length ? fairImagesSource : "",
     heroImageSource,
     headerImageSource,
+    photos,
+    photosSource,
   };
 
   const brandGallerySource = brand ? `brands/${brand}/gallery` : "";

@@ -46,6 +46,7 @@ export async function POST(request: Request) {
       [assets.bannerSource, "banner"],
       [assets.gallerySource, "gallery"],
       [assets.fairImagesSource, "fairs"],
+      [assets.photosSource, "photos"],
     ];
 
     for (const [source, kind] of imageJobs) {
