@@ -104,7 +104,11 @@ export const drainIndustry: IndustryModule = {
   renderHome: homeBody,
 
   homeDescription(manifest) {
-    const regions = [...groupByRegion(manifest.pages).keys()].join(" ");
-    return `${manifest.brandName} ${regions} 하수구·싱크대·변기 막힘 ${contactLine(manifest)}`;
+    // 지역을 전부 나열하면 키워드 스터핑(수십 개 지역명 덩어리)이 되고 설명문 기준(80자)도
+    // 넘는다. 사이트가 무엇을 하는지 간결하게 설명한다.
+    const contact = contactLine(manifest);
+    return `${manifest.brandName} 하수구·싱크대·변기 막힘 전문. 빠른 출동과 상담 안내${
+      contact ? ` ${contact.replace(/^상담 /, "")}` : ""
+    }`.trim();
   },
 };
